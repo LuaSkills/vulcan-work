@@ -1,4 +1,4 @@
-name: Release LuaSkill
+name: Release Vulcan Work
 
 on:
   push:
@@ -8,29 +8,18 @@ on:
 permissions:
   contents: write
 
-env:
-  # standard (default): one package for every system. platform: one package per system plus a package index,
-  # so each system downloads only its own native libraries. Set the repository variable LUASKILLS_PACKAGE_LAYOUT
-  # to "platform" to switch without editing this file.
-  LUASKILLS_PACKAGE_LAYOUT: ${{ vars.LUASKILLS_PACKAGE_LAYOUT || 'standard' }}
-
 jobs:
-
   release:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
-      # The action validates the skill, fails on a missing bundled payload or a tag that differs from skill.yaml,
-      # and writes the release assets with checksums.
-      # 该 Action 校验技能，内置载荷缺失或标签与 skill.yaml 不一致时失败，并写出带校验和的发布资产。
-      - name: Validate and package the skill
+      - name: Validate and package Vulcan Work
         id: package
         uses: LuaSkills/luaskills-debug@v0.8.1
         with:
-          layout: ${{ env.LUASKILLS_PACKAGE_LAYOUT }}
+          layout: standard
           expect-tag: ${{ github.ref_name }}
 
       - name: Publish the GitHub release

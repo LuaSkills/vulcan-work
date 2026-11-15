@@ -4,24 +4,59 @@ help:
   main:
     description: Learn the supported formats, result fields, and limits for Vulcan Work.
     file: help/help.md
+  topics:
+    - name: pdf
+      description: PDF page, text, and form-field tools.
+      file: help/pdf.md
+    - name: xlsx
+      description: Excel worksheets, cells, formulas, and cached results.
+      file: help/xlsx.md
+    - name: docx
+      description: Word main-body blocks and embedded comments.
+      file: help/docx.md
+    - name: pptx
+      description: PowerPoint slide text and optional speaker notes.
+      file: help/pptx.md
 entries:
   - name: pdf-inspect
     description: Get the page count and AcroForm field names from a local, unencrypted PDF.
     lua_entry: runtime/pdf-inspect.lua
     lua_module: pdf_inspect
+    help: pdf
     input_schema_file: schemas/pdf-inspect.input.schema.json
   - name: pdf-extract-text
     description: Extract bounded text for a range of one to ten pages from a local, unencrypted PDF. Scans require OCR.
     lua_entry: runtime/pdf-extract-text.lua
     lua_module: pdf_extract_text
+    help: pdf
     input_schema_file: schemas/pdf-extract-text.input.schema.json
   - name: xlsx-list-sheets
     description: List worksheets, including hidden worksheets, in a local XLSX workbook.
     lua_entry: runtime/xlsx-list-sheets.lua
     lua_module: xlsx_list_sheets
+    help: xlsx
     input_schema_file: schemas/xlsx-list-sheets.input.schema.json
   - name: xlsx-read-range
     description: Read up to 100 cells in a local XLSX worksheet. Return formulas and saved results separately without recalculating.
     lua_entry: runtime/xlsx-read-range.lua
     lua_module: xlsx_read_range
+    help: xlsx
     input_schema_file: schemas/xlsx-read-range.input.schema.json
+  - name: docx-read-blocks
+    description: Read main-body Word paragraphs and tables in document order, with paragraph style IDs and comment references.
+    lua_entry: runtime/docx-read-blocks.lua
+    lua_module: docx_read_blocks
+    help: docx
+    input_schema_file: schemas/docx-read-blocks.input.schema.json
+  - name: docx-list-comments
+    description: Read embedded Word comments with their IDs, authors, dates, and text.
+    lua_entry: runtime/docx-list-comments.lua
+    lua_module: docx_list_comments
+    help: docx
+    input_schema_file: schemas/docx-list-comments.input.schema.json
+  - name: pptx-extract-text
+    description: Extract stored text from a range of PowerPoint slides in presentation order, including grouped shapes, tables, and optional speaker notes.
+    lua_entry: runtime/pptx-extract-text.lua
+    lua_module: pptx_extract_text
+    help: pptx
+    input_schema_file: schemas/pptx-extract-text.input.schema.json

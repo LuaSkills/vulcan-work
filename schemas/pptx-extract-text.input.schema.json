@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the local input file."
+    },
+    "start_slide": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "First slide to return, one-based. Defaults to 1."
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number to return, at most 10. Defaults to 10."
+    },
+    "text_offset": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Zero-based character offset returned by a previous call. Select exactly one item when resuming."
+    },
+    "include_notes": {
+      "type": "boolean",
+      "description": "Include the slide's speaker notes as a separate text result. Defaults to false."
+    },
+    "notes_offset": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Zero-based speaker-notes offset. Select exactly one slide and set include_notes to true."
+    }
+  },
+  "required": [
+    "path"
+  ],
+  "additionalProperties": false
+}

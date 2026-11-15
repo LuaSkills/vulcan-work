@@ -20,7 +20,7 @@ try {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     & powershell -NoProfile -ExecutionPolicy Bypass -File $DebugScript -Command validate
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $DebugScript -Command package -Layout standard
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $DebugScript -Command package
     exit $LASTEXITCODE
 } finally {
     Pop-Location

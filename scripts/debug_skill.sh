@@ -132,9 +132,9 @@ if [ "$COMMAND" = "validate" ]; then
 fi
 
 if [ "$COMMAND" = "package" ]; then
-  # Layout is standard by default; the repository variable LUASKILLS_PACKAGE_LAYOUT or --layout selects platform.
-  # Layout 默认为 standard；仓库变量 LUASKILLS_PACKAGE_LAYOUT 或 --layout 可选择 platform。
-  "$BINARY_PATH" package --skill-path "$PROJECT_ROOT" --out-dir "$PROJECT_ROOT/dist" --layout "${LUASKILLS_PACKAGE_LAYOUT:-standard}" "$@"
+  # This skill ships one standard archive across supported platforms.
+  # 本技能在各平台共用同一个标准归档。
+  "$BINARY_PATH" package --skill-path "$PROJECT_ROOT" --out-dir "$PROJECT_ROOT/dist" --layout standard "$@"
   exit $?
 fi
 

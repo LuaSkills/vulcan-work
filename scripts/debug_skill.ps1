@@ -30,19 +30,12 @@ param(
     # Name of the environment variable that holds a GitHub token; never the token itself.
     # 保存 GitHub 令牌的环境变量名称；绝不是令牌本身。
     [string]$GithubTokenEnv = "",
-    # Release layout used by package: standard (default) or platform; LUASKILLS_PACKAGE_LAYOUT overrides the default.
-    # package 使用的发布布局：standard（默认）或 platform；LUASKILLS_PACKAGE_LAYOUT 可覆盖默认值。
-    [ValidateSet("", "standard", "platform")]
-    [string]$Layout = "",
     # Directory that receives the release assets written by package.
     # 接收 package 写出的发布资产的目录。
     [string]$OutDir = "dist",
     # Extra top-level entries that validate and package ship beside the default package entries.
     # validate 与 package 在默认包条目之外额外发布的顶层条目。
-    [string[]]$Include = @(),
-    # Omit the all-systems package from a platform release.
-    # 在分平台发布中省略全系统包。
-    [switch]$NoUniversal
+    [string[]]$Include = @()
 )
 
 # ErrorActionPreference makes staging and debugger failures explicit and terminating.
@@ -131,20 +124,17 @@ if ($Command -eq "probe-mirrors") {
 }
 elseif ($Command -in @("validate", "package")) {
     if ($Tool -or $ArgsJson -or $ArgsFile -or $EnableHostResult -or $GithubTokenEnv -or $GithubMirror.Count -gt 0) {
-        throw "$Command accepts only -Layout, -OutDir, -Include, -NoUniversal and -Output."
+        throw "$Command accepts only -OutDir, -Include and -Output."
     }
     if ($Output -eq "content") {
         throw "$Command renders pretty or json output."
     }
 }
-elseif ($Include.Count -gt 0 -or $NoUniversal) {
-    throw "-Include and -NoUniversal apply only to validate and package."
+elseif ($Include.Count -gt 0) {
+    throw "-Include applies only to validate and package."
 }
 elseif ($GithubMirror.Count -gt 1) {
     throw "$Command accepts at most one -GithubMirror value; only probe-mirrors compares several mirrors."
-}
-if ([string]::IsNullOrWhiteSpace($Layout)) {
-    $Layout = if ([string]::IsNullOrWhiteSpace($env:LUASKILLS_PACKAGE_LAYOUT)) { "standard" } else { $env:LUASKILLS_PACKAGE_LAYOUT }
 }
 # DebugMutex serializes setup, synchronization, and invocation for this repository.
 # DebugMutex 串行化当前仓库的初始化、同步与调用。
@@ -179,10 +169,7 @@ try {
         # ResolvedOutDir anchors a relative -OutDir to the repository root, matching debug_skill.sh.
         # ResolvedOutDir 将相对 -OutDir 锚定到仓库根目录，与 debug_skill.sh 一致。
         $ResolvedOutDir = if ([System.IO.Path]::IsPathRooted($OutDir)) { $OutDir } else { Join-Path $ProjectRoot $OutDir }
-        $ForwardedArgs += @("--out-dir", $ResolvedOutDir, "--layout", $Layout)
-        if ($NoUniversal) {
-            $ForwardedArgs += "--no-universal"
-        }
+        $ForwardedArgs += @("--out-dir", $ResolvedOutDir, "--layout", "standard")
     }
     if ($Command -notin @("validate", "package", "probe-mirrors")) {
         # The debugger copies the repository into the runtime root and skips build, checkout and packaging folders.

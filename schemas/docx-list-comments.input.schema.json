@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the local input file."
+    },
+    "start_comment": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "First comment to return, one-based. Defaults to 1."
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number to return, at most 20. Defaults to 20."
+    },
+    "text_offset": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Zero-based character offset returned by a previous call. Select exactly one item when resuming."
+    }
+  },
+  "required": [
+    "path"
+  ],
+  "additionalProperties": false
+}

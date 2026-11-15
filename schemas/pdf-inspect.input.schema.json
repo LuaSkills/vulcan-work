@@ -5,6 +5,16 @@
       "type": "string",
       "minLength": 1,
       "description": "Absolute path to the local input file."
+    },
+    "start_field": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "First field to return, one-based. Defaults to 1."
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of fields to return, at most 100. Defaults to 100."
     }
   },
   "required": [

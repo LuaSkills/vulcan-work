@@ -5,53 +5,27 @@
 from contextlib import closing
 from datetime import date, datetime, time, timedelta
 from io import BytesIO
-from pathlib import Path
-from zipfile import ZipFile
 
 from openpyxl import load_workbook
 from openpyxl.utils.cell import get_column_letter, range_boundaries
 from openpyxl.worksheet.formula import ArrayFormula, DataTableFormula
 from pypdf import PdfReader
 
-# Limit bytes read from the local file before a parser sees it.
-# 在解析前限制从本地文件读取的字节数。
-MAX_INPUT_BYTES = 32 * 1024 * 1024
-# Limit the XLSX container's advertised expanded size before reading worksheets.
-# 在读取工作表前限制 XLSX 容器声明的解压大小。
-MAX_XLSX_EXPANDED_BYTES = 128 * 1024 * 1024
+from python.local_files import read_local_file, read_office_zip
+from python.text_pages import document_text, select_items, single_item_offset, slice_text
+
 # Limit structural results without concealing that additional items exist.
 # 限制结构化结果数量，并显式报告还有其他条目。
 MAX_LIST_ITEMS = 100
 # Limit both page count and retained text per page.
 # 同时限制页数和每页保留的文本量。
 MAX_PDF_PAGES = 10
-# Limit retained text within a single page.
-# 限制单页保留的文本量。
-MAX_PDF_PAGE_CHARS = 1000
 # Limit both cell count and retained text per cell.
 # 同时限制单元格数量和每个单元格保留的文本量。
 MAX_XLSX_CELLS = 100
 # Limit the text retained for an individual cell value or formula.
 # 限制单个单元格值或公式保留的文本量。
 MAX_XLSX_CELL_CHARS = 160
-
-
-def read_local_file(raw_path: str, extension: str) -> bytes:
-    """Return bounded bytes from the absolute file path with the expected extension.
-    从具有指定扩展名的绝对文件路径读取限定大小的字节内容。
-    """
-    # An absolute path gives the caller the same interpretation in host and debugger.
-    # 绝对路径确保宿主和调试器对调用参数的解释一致。
-    path = Path(raw_path)
-    if not path.is_absolute() or path.suffix.lower() != extension or not path.is_file():
-        raise ValueError(f"Expected an absolute path to a local {extension} file.")
-    with path.open("rb") as source:
-        # Read one byte beyond the limit to detect oversize files without a separate stat.
-        # 多读取一个字节以识别超限文件，无需单独获取文件长度。
-        content = source.read(MAX_INPUT_BYTES + 1)
-    if len(content) > MAX_INPUT_BYTES:
-        raise ValueError("Input file exceeds 32 MiB.")
-    return content
 
 
 def open_pdf(path: str) -> PdfReader:
@@ -73,12 +47,18 @@ def pdf_inspect(args: dict, _context: dict) -> dict:
     # Field enumeration uses the interactive form dictionary, independent of page text.
     # 字段枚举使用交互表单字典，与页面文本独立。
     reader = open_pdf(args["path"])
-    fields = reader.get_fields() or {}
+    fields = list(reader.get_fields() or {})
+    # Page the declared field names without exposing form values.
+    # 分页返回已声明的字段名，避免带出表单值。
+    names, next_field = select_items(
+        fields, args.get("start_field", 1), args.get("limit", MAX_LIST_ITEMS), MAX_LIST_ITEMS,
+    )
     return {
         "page_count": len(reader.pages),
         "field_count": len(fields),
-        "field_names": list(fields)[:MAX_LIST_ITEMS],
-        "fields_truncated": len(fields) > MAX_LIST_ITEMS,
+        "field_names": names,
+        "fields_truncated": next_field is not None,
+        "next_field": next_field,
     }
 
 
@@ -91,6 +71,9 @@ def pdf_extract_text(args: dict, _context: dict) -> dict:
     start_page, end_page = args["start_page"], args["end_page"]
     if not 1 <= start_page <= end_page < start_page + MAX_PDF_PAGES:
         raise ValueError("Specify an ascending range of one to ten PDF pages.")
+    # A text offset refers to one exact page in the document.
+    # 文本偏移对应文档中一张确定的页。
+    offset = single_item_offset(args.get("text_offset", 0), end_page - start_page + 1)
     # Resolve the page count once for both validation and the returned metadata.
     # 页数只计算一次，供校验和返回元数据共用。
     reader = open_pdf(args["path"])
@@ -107,67 +90,58 @@ def pdf_extract_text(args: dict, _context: dict) -> dict:
         page_text = reader.pages[page_number - 1].extract_text()
         pages.append({
             "page": page_number,
-            "text": page_text[:MAX_PDF_PAGE_CHARS],
-            "text_truncated": len(page_text) > MAX_PDF_PAGE_CHARS,
+            **document_text(page_text, offset),
         })
     return {"page_count": page_count, "pages": pages}
-
-
-def read_xlsx(path: str) -> bytes:
-    """Return one validated XLSX snapshot for the formula and cached-value readers.
-    返回一份经过校验的 XLSX 快照，供公式和缓存值读取器共用。
-    """
-    # Read once so both views refer to exactly the same workbook bytes.
-    # 只读取一次，确保两种视图读取同一份工作簿字节。
-    content = read_local_file(path, ".xlsx")
-    with ZipFile(BytesIO(content)) as archive:
-        if sum(member.file_size for member in archive.infolist()) > MAX_XLSX_EXPANDED_BYTES:
-            raise ValueError("Expanded XLSX container exceeds 128 MiB.")
-    return content
 
 
 def xlsx_list_sheets(args: dict, _context: dict) -> dict:
     """Return worksheet names and visibility without loading worksheet cell data.
     返回工作表名称与可见性，无需加载工作表中的单元格数据。
     """
-    with closing(load_workbook(BytesIO(read_xlsx(args["path"])), read_only=True, keep_links=False)) as workbook:
+    with closing(load_workbook(BytesIO(read_office_zip(args["path"], ".xlsx")), read_only=True, keep_links=False)) as workbook:
         # Worksheets exclude chart-only sheets, which have no cell ranges.
         # 工作表列表排除没有单元格范围的图表工作表。
         worksheets = workbook.worksheets
+        selected, next_sheet = select_items(
+            worksheets, args.get("start_sheet", 1), args.get("limit", MAX_LIST_ITEMS), MAX_LIST_ITEMS,
+        )
         return {
             "sheet_count": len(worksheets),
-            "sheets": [{"name": sheet.title, "visibility": sheet.sheet_state} for sheet in worksheets[:MAX_LIST_ITEMS]],
-            "sheets_truncated": len(worksheets) > MAX_LIST_ITEMS,
+            "sheets": [{"name": sheet.title, "visibility": sheet.sheet_state} for sheet in selected],
+            "sheets_truncated": next_sheet is not None,
+            "next_sheet": next_sheet,
         }
 
 
-def cell_value(value: object) -> tuple[object, bool]:
-    """Return a JSON-compatible cell value and whether its text was truncated.
-    返回兼容 JSON 的单元格值以及文本是否被截断。
+def cell_value(value: object, offset: int) -> tuple[object, int | None]:
+    """Return a JSON-compatible cell value and the next offset for string values.
+    返回兼容 JSON 的单元格值，字符串有剩余时返回续读偏移。
     """
     if isinstance(value, (date, datetime, time)):
-        return value.isoformat(), False
+        return value.isoformat(), None
     if isinstance(value, timedelta):
-        return {"seconds": value.total_seconds()}, False
+        return {"seconds": value.total_seconds()}, None
     if isinstance(value, str):
-        return value[:MAX_XLSX_CELL_CHARS], len(value) > MAX_XLSX_CELL_CHARS
-    return value, False
+        return slice_text(value, offset, MAX_XLSX_CELL_CHARS)
+    return value, None
 
 
-def serialize_cell(cell: object, cached_cell: object, address: str) -> dict:
+def serialize_cell(cell: object, cached_cell: object, address: str, offset: int) -> dict:
     """Combine source and cached cells at address without recalculating a formula.
     合并 address 处的源单元格与缓存单元格，无需重算公式。
     """
     if cell is None or cell.data_type != "f":
         # Missing worksheet rows are represented as blank cells with their original addresses.
         # 缺失的工作表行表示为保留原地址的空白单元格。
-        value, truncated = cell_value(cell.value if cell is not None else None)
+        value, next_value_offset = cell_value(cell.value if cell is not None else None, offset)
         return {
             "address": address,
             "kind": "value",
             "type": cell.data_type if value is not None else None,
             "value": value,
-            "value_truncated": truncated,
+            "value_truncated": next_value_offset is not None,
+            "next_value_offset": next_value_offset,
         }
 
     # Some workbook formula types carry structured metadata rather than a string.
@@ -182,17 +156,19 @@ def serialize_cell(cell: object, cached_cell: object, address: str) -> dict:
         formula = None
     # Keep formula display and the stored result independently bounded.
     # 分别限制公式正文与工作簿中保存的结果。
-    formula_text, formula_truncated = cell_value(formula)
-    cached_value, cached_truncated = cell_value(cached_cell.value)
+    formula_text, next_formula_offset = cell_value(formula, offset)
+    cached_value, next_cached_value_offset = cell_value(cached_cell.value, offset)
     return {
         "address": address,
         "kind": "formula",
         "formula_kind": formula_kind,
         "formula": formula_text,
-        "formula_truncated": formula_truncated,
+        "formula_truncated": next_formula_offset is not None,
+        "next_formula_offset": next_formula_offset,
         "cached_type": cached_cell.data_type if cached_value is not None else None,
         "cached_value": cached_value,
-        "cached_value_truncated": cached_truncated,
+        "cached_value_truncated": next_cached_value_offset is not None,
+        "next_cached_value_offset": next_cached_value_offset,
     }
 
 
@@ -205,12 +181,16 @@ def xlsx_read_range(args: dict, _context: dict) -> dict:
     first_col, first_row, last_col, last_row = range_boundaries(args["range"].upper())
     if not (1 <= first_col <= last_col <= 16384 and 1 <= first_row <= last_row <= 1048576):
         raise ValueError("Cell range must be ascending and inside the Excel grid.")
-    if (last_col - first_col + 1) * (last_row - first_row + 1) > MAX_XLSX_CELLS:
+    # Text continuation identifies one cell while ordinary reads can span a rectangle.
+    # 文本续读定位一个单元格，普通读取可跨矩形区域。
+    cell_count = (last_col - first_col + 1) * (last_row - first_row + 1)
+    offset = single_item_offset(args.get("text_offset", 0), cell_count)
+    if cell_count > MAX_XLSX_CELLS:
         raise ValueError("Select at most 100 XLSX cells per call.")
 
     # A single snapshot prevents inconsistent formula and cache reads if a file is replaced.
     # 使用同一份快照，避免文件被替换时两种视图不一致。
-    content = read_xlsx(args["path"])
+    content = read_office_zip(args["path"], ".xlsx")
     sheet_name = args["sheet"]
     with (
         closing(load_workbook(BytesIO(content), read_only=True, keep_links=False)) as formulas,
@@ -235,5 +215,5 @@ def xlsx_read_range(args: dict, _context: dict) -> dict:
             # 两个读取器共用同一快照，且使用相同的行列边界。
             formula_row, cache_row = next(row_pairs, (empty_row, empty_row))
             for column, (cell, cached_cell) in enumerate(zip(formula_row, cache_row, strict=True), first_col):
-                cells.append(serialize_cell(cell, cached_cell, f"{get_column_letter(column)}{row}"))
+                cells.append(serialize_cell(cell, cached_cell, f"{get_column_letter(column)}{row}", offset))
     return {"sheet": sheet_name, "range": args["range"].upper(), "cells": cells}

@@ -1,4 +1,4 @@
-name: Validate and Package LuaSkill
+name: Verify Vulcan Work
 
 on:
   pull_request:
@@ -30,4 +30,4 @@ jobs:
         with:
           name: ${{ github.event.repository.name }}-verified-package
           path: dist/*
-          if-no-files-found: ignore
+          if-no-files-found: error

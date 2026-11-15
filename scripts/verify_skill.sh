@@ -8,4 +8,4 @@ bash ./scripts/debug_skill.sh inspect --output json
 bash ./scripts/debug_skill.sh list-tools --output content
 "${PYTHON_COMMAND:-python3}" -m unittest discover -s tests -v
 bash ./scripts/debug_skill.sh validate
-bash ./scripts/debug_skill.sh package --layout standard
+bash ./scripts/debug_skill.sh package

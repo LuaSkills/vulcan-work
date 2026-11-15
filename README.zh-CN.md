@@ -2,7 +2,7 @@
 
 # Vulcan Work
 
-面向办公场景的 LuaSkills 技能包。首版提供 PDF 和 XLSX 的本地只读工具。
+面向办公场景的 LuaSkills 技能包。提供 PDF、XLSX、DOCX 和 PPTX 的本地只读工具。
 
 | 入口 | 返回内容 |
 | --- | --- |
@@ -10,8 +10,11 @@
 | `pdf-extract-text` | 指定范围内按页分组的文本 |
 | `xlsx-list-sheets` | 工作表名称与可见状态 |
 | `xlsx-read-range` | 单元格值、公式以及 Excel 已保存的公式结果 |
+| `docx-read-blocks` | 正文段落、表格、段落样式和批注引用 |
+| `docx-list-comments` | 批注标识、作者、日期和文本 |
+| `pptx-extract-text` | 按放映顺序提取文本框、组合形状和表格中的文本 |
 
-传入文件的绝对路径。PDF 页码从 1 开始。Excel 使用 A1 范围和准确的工作表名称。限制与字段说明见[工具帮助](help/help.md)。Word 和 PowerPoint 仍在规划中。
+传入文件的绝对路径。PDF 页码从 1 开始。Excel 使用 A1 范围和准确的工作表名称。限制与字段说明见[工具帮助](help/help.md)。长文本可按返回的偏移续读。PowerPoint 可同时读取演讲者备注。
 
 ## 验证与打包
 
@@ -22,5 +25,3 @@ Windows 执行 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/veri
 ## 许可证与来源
 
 项目采用 [MIT 许可证](LICENSE)。[第三方声明](licenses/THIRD_PARTY_NOTICES.md)记录了锁定的运行时依赖和许可证原文，以及设计阶段参考的 Anthropic Skills 来源。
-
-项目基于 [LuaSkills demo-skill 模板](https://github.com/LuaSkills/demo-skill)初始化。
