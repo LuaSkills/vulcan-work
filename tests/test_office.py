@@ -575,6 +575,25 @@ class OfficeEntryTests(unittest.TestCase):
                 self.assertNotIn("ppt/slides/slide2.xml", archive.namelist())
                 self.assertNotIn("ppt/notesSlides/notesSlide1.xml", archive.namelist())
 
+    def test_powerpoint_rejects_removing_all_slides_before_writing(self) -> None:
+        """Reject a complete removal and retain both the source and the unused output path.
+        拒绝删光幻灯片，保持源文件不变且不创建输出文件。
+        """
+        with TemporaryDirectory() as directory:
+            # Derive every presentation position from the actual fixture.
+            # 从样例实际结果派生全部放映位置。
+            source = FIXTURES / "office.pptx"
+            original = source.read_bytes()
+            slide_count = self.result("pptx-extract-text", source)["slide_count"]
+            output = Path(directory) / "empty.pptx"
+            result = call_tool("pptx-remove-slides", {
+                "path": str(source), "output_path": str(output),
+                "slides": list(range(1, slide_count + 1)),
+            })
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(output.exists())
+            self.assertEqual(source.read_bytes(), original)
+
     @unittest.skipUnless(
         which("soffice") or which("soffice.com")
         or (sys.platform == "win32" and Path("C:/Program Files/LibreOffice/program/soffice.com").is_file())

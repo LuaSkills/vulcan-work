@@ -2,24 +2,24 @@ name: vulcan-work
 version: 0.1.0
 help:
   main:
-    description: Learn the supported formats, result fields, and limits for Vulcan Work.
+    description: Choose when and how to inspect, edit, create, or render local PDF, XLSX, DOCX, and PPTX files.
     file: help/help.md
   topics:
     - name: pdf
-      description: PDF page, text, and form-field tools.
+      description: Inspect PDF pages and form values, extract text or run OCR, and merge pages or fill a form in a copy.
       file: help/pdf.md
     - name: xlsx
-      description: Excel worksheets, cells, formulas, and cached results.
+      description: Find worksheets, read cells and saved formula results, or create and edit an Excel workbook copy.
       file: help/xlsx.md
     - name: docx
-      description: Word main-body blocks and embedded comments.
+      description: Read Word body blocks and review comments, create documents, append paragraphs, or edit precise text in a copy.
       file: help/docx.md
     - name: pptx
-      description: PowerPoint slide text and optional speaker notes.
+      description: Read slide text and speaker notes, create or edit slides, or render a PDF preview.
       file: help/pptx.md
 entries:
   - name: pdf-inspect
-    description: Get the page count and AcroForm field names from a local, unencrypted PDF.
+    description: Get page counts and AcroForm field metadata from a local, unencrypted PDF. Set include_values to read stored field values.
     lua_entry: runtime/pdf-inspect.lua
     lua_module: pdf_inspect
     help: pdf
@@ -115,7 +115,7 @@ entries:
     help: pptx
     input_schema_file: schemas/pptx-append-slides.input.schema.json
   - name: pptx-remove-slides
-    description: Remove selected slides and write a new PowerPoint copy.
+    description: Remove selected slides and write a new PowerPoint copy with at least one slide.
     lua_entry: runtime/pptx-remove-slides.lua
     lua_module: pptx_remove_slides
     help: pptx

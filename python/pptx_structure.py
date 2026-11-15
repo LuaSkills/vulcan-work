@@ -272,6 +272,10 @@ def pptx_remove_slides(args: dict, _context: dict) -> dict:
         slides = nodes(lists[0], presentation, "sldId")
         if any(not 1 <= position <= len(slides) for position in positions):
             raise ValueError("At least one selected slide position is outside the presentation.")
+        # Keep the copy usable as a presentation, before rewriting any package parts.
+        # 在改写任何包部件前，确保副本至少有一张幻灯片可展示。
+        if len(positions) == len(slides):
+            raise ValueError("At least one slide must remain in the presentation.")
         selected = [slides[position - 1] for position in positions]
         identifiers = {item.getAttributeNS(relation, "id") for item in selected}
         numeric_ids = {item.getAttribute("id") for item in selected}

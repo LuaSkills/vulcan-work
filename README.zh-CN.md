@@ -27,7 +27,7 @@
 
 写入时须提供已有目录中的新文件绝对路径。操作保留源文件和已有输出文件。
 
-Excel 写入副本时保留未修改的图表和绘图部件。OCR 需要 Poppler，以及 Tesseract 或 Windows OCR。PowerPoint 新建和预览需要 LibreOffice Impress。这些本机应用独立安装。
+Excel 写入副本时保留未修改的图表和绘图部件。OCR 要先用 Poppler 的 `pdftoppm` 将 PDF 页面转成图片，使用 Windows 系统 OCR 时也需要它。PowerPoint 新建和预览需要 LibreOffice Impress。PDF 预览用于核对画面，LibreOffice 导出时可能改变中文文本的阅读顺序。提取或索引文字时请使用源 PPTX。这些本机应用独立安装。
 
 ## 验证与打包
 

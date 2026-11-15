@@ -1,16 +1,18 @@
 # PowerPoint
 
-Use `pptx-extract-text` with an absolute `.pptx` path. It reads up to ten slides in presentation order, including text boxes, grouped shapes, and table cells. It reports each slide's stored hidden status. Use `next_slide` as `start_slide`.
+Read this topic to choose between stored slide text, speaker notes, editable slides, and a rendered preview. When editing or removing existing slides, read the relevant slide first if its position or text needs confirmation.
+
+Use `vulcan-work-pptx-extract-text` with an absolute `.pptx` path. It reads up to ten slides in presentation order, including text boxes, grouped shapes, and table cells. It reports each slide's stored hidden status. Use `next_slide` as `start_slide`.
 
 Set `include_notes` to true to read the speaker-notes body separately. Slide text and notes each have a 1,000-character budget. To continue either one, set `limit` to 1 and pass the corresponding `next_text_offset` as `text_offset` for slide text or `notes_offset` for notes.
 
 Example `{"path":"D:/work/briefing.pptx","start_slide":4,"limit":1,"include_notes":true}`.
 
-The extraction entry reads stored text. Use the separate preview entry to render slide visuals.
+The extraction entry reads stored text. For appearance, layout, or a PDF preview, use `vulcan-work-pptx-export-preview` and inspect its PDF output.
 
 ## Replace slide text
 
-Use `pptx-replace-text` with a source `path`, an unused absolute `output_path`, and the one-based `slide` position. Provide exact case-sensitive `find` and `replacement` strings on a single line. Set `expected_matches` to the exact number of occurrences you intend to replace. A mismatch leaves the output path unused.
+Use `vulcan-work-pptx-replace-text` with a source `path`, an unused absolute `output_path`, and the one-based `slide` position. Provide exact case-sensitive `find` and `replacement` strings on a single line. Set `expected_matches` to the exact number of occurrences you intend to replace. A mismatch leaves the output path unused.
 
 A match can span styled runs in the same paragraph. The replacement inherits the first matched run's styling. Other slides and notes stay in their existing package parts.
 
@@ -18,8 +20,12 @@ Example `{"path":"D:/work/review.pptx","output_path":"D:/work/review-approved.pp
 
 ## Manage slides and render previews
 
-`pptx-create` generates an editable presentation from up to 30 `slides` with a title and optional body paragraphs. `pptx-append-slides` adds such slides to an existing deck using its first slide's layout or the deck's first master layout. These are plain title-and-body slides.
+`vulcan-work-pptx-create` generates an editable presentation from up to 30 `slides` with a title and optional body paragraphs. `vulcan-work-pptx-append-slides` adds such slides to an existing deck using its first slide's layout or the deck's first master layout. These are plain title-and-body slides.
 
-`pptx-remove-slides` deletes one-based positions from a copy. Slide parts and uniquely owned notes or media are removed when they are no longer reachable. The tool rejects a removal when another part still links to the slide. `pptx-export-preview` renders the presentation to a new PDF in presentation order.
+`vulcan-work-pptx-remove-slides` deletes one-based positions from a copy. Slide parts and uniquely owned notes or media are removed when they are no longer reachable. Keep at least one slide in the copy. The tool also rejects a removal when another part still links to the slide. `vulcan-work-pptx-export-preview` renders the presentation to a new PDF in presentation order.
 
-Creation and rendered previews require LibreOffice Impress. Editing, appending, and removing slides work directly on the package. Every write requires an unused output path.
+Creation and rendered previews require LibreOffice Impress. Use the preview PDF to review the slide visuals. LibreOffice may export Chinese text in a different reading order from the source, so use the source PPTX for text extraction and indexing. Editing, appending, and removing slides work directly on the package. Every write requires an unused output path. To verify a text edit or slide count, extract the relevant text or slide metadata from the output copy.
+
+## Entry arguments
+
+Pass the fields shown in each example as separate entry arguments. Treat the schema's `input` heading as the title of the whole argument list. For a call, pass one named argument for each direct child of that heading. Keep nested lists or objects inside their own named field.

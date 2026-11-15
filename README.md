@@ -27,7 +27,7 @@ Supply an absolute file path. PDF page numbers are one-based. Excel ranges use A
 
 Write operations require an unused absolute output path in an existing directory. They preserve the source files.
 
-Excel copies preserve unrelated drawing and chart parts. OCR needs Poppler and either Tesseract or Windows OCR. Creating PowerPoint decks and exporting previews require LibreOffice Impress. These local applications remain separate from the skill package.
+Excel copies preserve unrelated drawing and chart parts. OCR requires Poppler's `pdftoppm` to rasterize PDF pages, including when the Windows OCR engine recognizes the text. Creating PowerPoint decks and exporting previews require LibreOffice Impress. LibreOffice PDF previews are for visual review. Extract or index text from the source PPTX because the preview can reorder Chinese text. These local applications remain separate from the skill package.
 
 ## Verify and package
 
