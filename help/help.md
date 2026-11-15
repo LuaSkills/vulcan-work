@@ -27,6 +27,8 @@ Read the matching format topic when deciding between operations or planning a mu
 | `pptx` | Replace precise text on a selected slide in a copy | `vulcan-work-pptx-replace-text` |
 | `pptx` | Render slide visuals as a new PDF preview | `vulcan-work-pptx-export-preview` |
 
+For PowerPoint creation or PDF previews, read the `pptx` topic and check that LibreOffice Impress is available on the host. If it is missing, ask the user whether to install it. For an existing deck, the user can open it for visual review.
+
 ## Work with the result
 
 Pass the fields shown in each example as separate entry arguments. Treat the schema's `input` heading as the title of the whole argument list. For a call, pass one named argument for each direct child of that heading. Keep nested lists or objects inside their own named field.

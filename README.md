@@ -29,6 +29,8 @@ Write operations require an unused absolute output path in an existing directory
 
 Excel copies preserve unrelated drawing and chart parts. OCR requires Poppler's `pdftoppm` to rasterize PDF pages, including when the Windows OCR engine recognizes the text. Creating PowerPoint decks and exporting previews require LibreOffice Impress. LibreOffice PDF previews are for visual review. Extract or index text from the source PPTX because the preview can reorder Chinese text. These local applications remain separate from the skill package.
 
+Before creating a presentation or exporting a preview, check whether LibreOffice Impress is installed. If it is missing, ask the user before installing it. The user can open an existing PPTX in a presentation app for visual review. See [PowerPoint help](help/pptx.md#check-libreoffice-before-creating-or-rendering).
+
 ## Verify and package
 
 Install PyYAML in the development Python environment (`python -m pip install pyyaml`).

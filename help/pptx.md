@@ -26,6 +26,12 @@ Example `{"path":"D:/work/review.pptx","output_path":"D:/work/review-approved.pp
 
 Creation and rendered previews require LibreOffice Impress. Use the preview PDF to review the slide visuals. LibreOffice may export Chinese text in a different reading order from the source, so use the source PPTX for text extraction and indexing. Editing, appending, and removing slides work directly on the package. Every write requires an unused output path. To verify a text edit or slide count, extract the relevant text or slide metadata from the output copy.
 
+## Check LibreOffice before creating or rendering
+
+Before calling `vulcan-work-pptx-create` or `vulcan-work-pptx-export-preview`, check for LibreOffice Impress on the host running Vulcan Code. Look for `soffice` on that host's PATH. For a desktop installation, also check `%ProgramFiles%/LibreOffice/program/soffice.com` on Windows or `/Applications/LibreOffice.app/Contents/MacOS/soffice` on macOS.
+
+If LibreOffice is unavailable, tell the user which requested operation needs it and ask whether they want to install it. Wait for their approval before installing. If they choose to continue without LibreOffice, let them know that creation and PDF preview are unavailable. For an existing presentation, ask the user to open it in their presentation app to check the layout and appearance.
+
 ## Entry arguments
 
 Pass the fields shown in each example as separate entry arguments. Treat the schema's `input` heading as the title of the whole argument list. For a call, pass one named argument for each direct child of that heading. Keep nested lists or objects inside their own named field.
