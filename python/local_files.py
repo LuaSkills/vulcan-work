@@ -39,6 +39,13 @@ def read_office_zip(path: str, extension: str) -> bytes:
     # 归档检查与后续读取使用同一份快照。
     content = read_local_file(path, extension)
     with ZipFile(BytesIO(content)) as archive:
-        if sum(member.file_size for member in archive.infolist()) > MAX_OFFICE_EXPANDED_BYTES:
-            raise ValueError(f"Expanded {extension[1:].upper()} container exceeds 128 MiB.")
+        validate_expanded_size(archive, extension)
     return content
+
+
+def validate_expanded_size(archive: ZipFile, extension: str) -> None:
+    """Apply the same expanded-size budget to a source or generated Office ZIP.
+    对输入与生成的 Office ZIP 使用相同的解压大小预算。
+    """
+    if sum(member.file_size for member in archive.infolist()) > MAX_OFFICE_EXPANDED_BYTES:
+        raise ValueError(f"Expanded {extension[1:].upper()} container exceeds 128 MiB.")

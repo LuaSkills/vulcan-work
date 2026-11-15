@@ -2,7 +2,7 @@
 
 # Vulcan Work
 
-面向办公场景的 LuaSkills 技能包。提供 PDF、XLSX、DOCX 和 PPTX 的本地只读工具。
+面向办公场景的 LuaSkills 技能包。提供 PDF、XLSX、DOCX 和 PPTX 的本地读写工具。
 
 | 入口 | 返回内容 |
 | --- | --- |
@@ -13,8 +13,14 @@
 | `docx-read-blocks` | 正文段落、表格、段落样式和批注引用 |
 | `docx-list-comments` | 批注标识、作者、日期和文本 |
 | `pptx-extract-text` | 按放映顺序提取文本框、组合形状和表格中的文本 |
+| `pdf-compose` | 合并 PDF，或将指定页提取到新 PDF |
+| `xlsx-write-cells` | 新建工作簿，或向工作簿副本批量写入单元格 |
+| `docx-append-paragraphs` | 新建 Word 文档，或向副本追加段落和标题 |
+| `pptx-replace-text` | 在新副本的指定幻灯片上精确替换文字 |
 
 传入文件的绝对路径。PDF 页码从 1 开始。Excel 使用 A1 范围和准确的工作表名称。限制与字段说明见[工具帮助](help/help.md)。长文本可按返回的偏移续读。PowerPoint 可同时读取演讲者备注。
+
+写入时须提供已有目录中的新文件绝对路径。操作保留源文件和已有输出文件。
 
 ## 验证与打包
 

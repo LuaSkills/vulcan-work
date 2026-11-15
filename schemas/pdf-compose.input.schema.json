@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Absolute path to the existing source file."
+          },
+          "start_page": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "First page, inclusive. Defaults to the first page."
+          },
+          "end_page": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Last page, inclusive. Defaults to the final page."
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "output_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path for the new output file in an existing directory. The path must be unused."
+    }
+  },
+  "required": [
+    "sources",
+    "output_path"
+  ],
+  "additionalProperties": false
+}

@@ -97,9 +97,15 @@ class OfficeEntryTests(unittest.TestCase):
         """Return the decoded user-visible result for a fixture and operation.
         返回指定样例与操作的用户可见结果。
         """
+        return self.invoke(entry, path=str(FIXTURES / filename), **arguments)
+
+    def invoke(self, entry: str, **arguments: object) -> dict:
+        """Return the decoded result for a successful call with explicit arguments.
+        返回显式参数调用成功后的解码结果。
+        """
         # The debugger may print bootstrap status before its JSON envelope.
         # 调试器可能在 JSON 外层结构之前打印启动状态。
-        finished = call_tool(entry, {"path": str(FIXTURES / filename), **arguments})
+        finished = call_tool(entry, arguments)
         self.assertEqual(finished.returncode, 0, finished.stdout + finished.stderr)
         # JSON envelope starts after any setup lines and contains a serialized tool response.
         # JSON 外层结构位于初始化日志之后，并包含序列化的工具结果。
@@ -342,3 +348,137 @@ class OfficeEntryTests(unittest.TestCase):
                                  notes_offset=first["notes"]["next_text_offset"])["slides"][0]
             self.assertEqual(first["notes"]["text"] + second["notes"]["text"], expected)
             self.assertIsNone(second["notes"]["next_text_offset"])
+
+
+    def test_pdf_compose_copies_pages_in_requested_order(self) -> None:
+        """Write a merged PDF, then read the generated pages and check the originals.
+        写入合并 PDF，再读回生成的页面并核对源文件。
+        """
+        with TemporaryDirectory() as directory:
+            # Two different synthetic PDFs make ordering observable.
+            # 两份不同的合成 PDF 使页面顺序可以验证。
+            folder = Path(directory)
+            first = folder / "first.pdf"
+            second = folder / "second.pdf"
+            output = folder / "combined.pdf"
+            write_pdf_fixture(first, "First page")
+            write_pdf_fixture(second, "Second page")
+            before = first.read_bytes(), second.read_bytes()
+            result = self.invoke("pdf-compose", sources=[{"path": str(second)}, {"path": str(first), "start_page": 1}],
+                                 output_path=str(output))
+            self.assertEqual(result["page_count"], 2)
+            pages = self.result("pdf-extract-text", output, start_page=1, end_page=2)["pages"]
+            self.assertEqual([page["text"] for page in pages], ["Second page", "First page"])
+            self.assertEqual((first.read_bytes(), second.read_bytes()), before)
+
+    def test_office_writers_never_replace_an_existing_output(self) -> None:
+        """Verify that an existing output remains byte-for-byte unchanged.
+        验证已有输出文件的字节完全不变。
+        """
+        with TemporaryDirectory() as directory:
+            # Occupy the path with a sentinel before calling the real writer.
+            # 在调用实际写入工具前用哨兵内容占用输出路径。
+            output = Path(directory) / "existing.pdf"
+            output.write_bytes(b"keep existing bytes")
+            result = call_tool("pdf-compose", {"sources": [{"path": str(FIXTURES / "office.pdf")}],
+                                               "output_path": str(output)})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("already exists", result.stdout + result.stderr)
+            self.assertEqual(output.read_bytes(), b"keep existing bytes")
+            self.assertEqual(list(output.parent.glob(".vulcan-work-*.tmp")), [])
+
+    def test_excel_writer_distinguishes_literal_text_and_formulas(self) -> None:
+        """Create a workbook and read literal values and explicit formulas back.
+        新建工作簿并读回字面量值和显式公式。
+        """
+        with TemporaryDirectory() as directory:
+            # A leading equals sign is ordinary text unless supplied through formula.
+            # 除非通过 formula 提供，开头的等号仍是普通文本。
+            output = Path(directory) / "汇总.xlsx"
+            result = self.invoke("xlsx-write-cells", output_path=str(output), sheet="汇总", cells=[
+                {"address": "A1", "value": "=1+1"}, {"address": "B1", "formula": "=1+1"},
+                {"address": "C1", "value": True},
+            ])
+            self.assertEqual(result["cells_written"], 3)
+            data = self.result("xlsx-read-range", output, sheet="汇总", range="A1:C1")
+            literal, formula, boolean = data["cells"]
+            self.assertEqual(literal["value"], "=1+1")
+            self.assertEqual(formula["formula"], "=1+1")
+            self.assertIsNone(formula["cached_value"])
+            self.assertIs(boolean["value"], True)
+
+    def test_excel_writer_clears_a_cell_in_a_new_copy(self) -> None:
+        """Clear a cell while preserving the source file and other worksheets.
+        清除一个单元格，同时保留源文件和其他工作表。
+        """
+        with TemporaryDirectory() as directory:
+            # Use the existing workbook fixture and save to a separate path.
+            # 使用现有工作簿样例并保存到独立路径。
+            source = FIXTURES / "office.xlsx"
+            before = source.read_bytes()
+            output = Path(directory) / "edited.xlsx"
+            self.invoke("xlsx-write-cells", path=str(source), output_path=str(output), sheet="Data",
+                        cells=[{"address": "A1", "value": None}])
+            cells = self.result("xlsx-read-range", output, sheet="Data", range="A1:B1")["cells"]
+            self.assertIsNone(cells[0]["value"])
+            self.assertEqual(cells[1]["value"], 6)
+            self.assertEqual(self.result("xlsx-list-sheets", output)["sheet_count"], 2)
+            self.assertEqual(source.read_bytes(), before)
+
+    def test_word_writer_creates_and_appends_to_a_copy(self) -> None:
+        """Create a Word document and append formatted paragraphs to its copy.
+        新建 Word 文档，并向其副本追加带结构的段落。
+        """
+        with TemporaryDirectory() as directory:
+            # Use the public tool to create the initial Word document.
+            # 使用公开工具创建初始 Word 文档。
+            source = Path(directory) / "new.docx"
+            output = source.with_name("edited.docx")
+            self.invoke("docx-append-paragraphs", output_path=str(source),
+                        paragraphs=[{"text": "进展", "heading_level": 2}])
+            before = source.read_bytes()
+            self.invoke("docx-append-paragraphs", path=str(source), output_path=str(output),
+                        paragraphs=[{"text": "第一行\n第二行\t确认为空格之外的制表符"}])
+            blocks = self.result("docx-read-blocks", output)["blocks"]
+            self.assertEqual(blocks[0]["style_id"], "Heading2")
+            self.assertEqual(blocks[0]["outline_level"], 1)
+            self.assertEqual(blocks[1]["text"], "第一行\n第二行\t确认为空格之外的制表符")
+            self.assertEqual(source.read_bytes(), before)
+
+
+    def test_powerpoint_writer_replaces_across_styled_runs(self) -> None:
+        """Replace text spanning two runs and preserve unrelated slide content.
+        替换跨两个文本片段的文字，并保留无关的幻灯片内容。
+        """
+        with TemporaryDirectory() as directory:
+            # The first slide in presentation order is stored as slide2.xml.
+            # 放映顺序的第一页存储在 slide2.xml 中。
+            source = Path(directory) / "source.pptx"
+            output = source.with_name("updated.pptx")
+            replace_fixture_xml(FIXTURES / "office.pptx", source, "ppt/slides/slide2.xml",
+                                "Grouped content", 'Grouped </a:t></a:r><a:r><a:rPr b="1"/><a:t>content')
+            before = source.read_bytes()
+            data = self.invoke("pptx-replace-text", path=str(source), output_path=str(output), slide=1,
+                               find="Grouped content", replacement="已审核", expected_matches=1)
+            self.assertEqual(data["matches_replaced"], 1)
+            first, second = self.result("pptx-extract-text", output, include_notes=True)["slides"]
+            self.assertEqual(first["text"].splitlines(), ["已审核", "Item", "Total"])
+            self.assertTrue(first["notes"]["text"])
+            self.assertEqual(second["text"], "Original first")
+            self.assertEqual(source.read_bytes(), before)
+
+    def test_powerpoint_writer_rejects_a_stale_match_count(self) -> None:
+        """Reject a changed match count without publishing an output file.
+        拒绝有变化的匹配数量，并且不发布输出文件。
+        """
+        with TemporaryDirectory() as directory:
+            # Ask to replace two occurrences where the fixture has exactly one.
+            # 样例只有一处匹配，故意请求替换两处。
+            output = Path(directory) / "unexpected.pptx"
+            result = call_tool("pptx-replace-text", {
+                "path": str(FIXTURES / "office.pptx"), "output_path": str(output), "slide": 1,
+                "find": "Grouped content", "replacement": "Updated", "expected_matches": 2,
+            })
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("found 1", result.stdout + result.stderr)
+            self.assertFalse(output.exists())

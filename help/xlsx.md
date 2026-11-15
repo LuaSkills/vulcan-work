@@ -7,3 +7,11 @@ Use `xlsx-read-range` with the exact `sheet` and an A1 address or rectangular `r
 String values are limited to 160 characters per call. Continue a string by selecting that one cell and passing its `next_value_offset`, `next_formula_offset`, or `next_cached_value_offset` as `text_offset`. The offset applies to each string in that cell's result. Numeric and date values remain whole. Formulas use their stored results.
 
 Example `{"path":"D:/work/budget.xlsx","sheet":"Summary","range":"B12","text_offset":160}`.
+
+## Write cells
+
+Use `xlsx-write-cells` with an unused absolute `output_path`, an exact `sheet` name, and up to 100 unique A1 cell updates. Set `path` to copy a supported workbook or omit it to create a new workbook with the named sheet. Each update accepts a scalar `value` or an explicit `formula`. A null value clears a cell. A string beginning with an equals sign stays literal when passed as `value`.
+
+Example `{"output_path":"D:/work/summary.xlsx","sheet":"Summary","cells":[{"address":"A1","value":"Total"},{"address":"B1","formula":"=SUM(B2:B10)"}]}`.
+
+Saving a workbook copy clears stored formula results. A spreadsheet application can recalculate them when the copy is opened. Workbooks with drawings, signatures, or unsupported advanced parts are rejected to protect source fidelity.

@@ -60,3 +60,27 @@ entries:
     lua_module: pptx_extract_text
     help: pptx
     input_schema_file: schemas/pptx-extract-text.input.schema.json
+  - name: pdf-compose
+    description: Write a new PDF by joining ordered files or selected page ranges.
+    lua_entry: runtime/pdf-compose.lua
+    lua_module: pdf_compose
+    help: pdf
+    input_schema_file: schemas/pdf-compose.input.schema.json
+  - name: xlsx-write-cells
+    description: Write literal values or explicit formulas to a new Excel workbook or workbook copy.
+    lua_entry: runtime/xlsx-write-cells.lua
+    lua_module: xlsx_write_cells
+    help: xlsx
+    input_schema_file: schemas/xlsx-write-cells.input.schema.json
+  - name: docx-append-paragraphs
+    description: Write paragraphs or headings to a new Word document or an appended copy.
+    lua_entry: runtime/docx-append-paragraphs.lua
+    lua_module: docx_append_paragraphs
+    help: docx
+    input_schema_file: schemas/docx-append-paragraphs.input.schema.json
+  - name: pptx-replace-text
+    description: Replace an exact number of text matches on one slide and write a new PowerPoint copy.
+    lua_entry: runtime/pptx-replace-text.lua
+    lua_module: pptx_replace_text
+    help: pptx
+    input_schema_file: schemas/pptx-replace-text.input.schema.json
