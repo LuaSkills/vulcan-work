@@ -6,7 +6,7 @@ Set `include_notes` to true to read the speaker-notes body separately. Slide tex
 
 Example `{"path":"D:/work/briefing.pptx","start_slide":4,"limit":1,"include_notes":true}`.
 
-This reads stored text. Slide master content, images, and rendered previews are outside this tool's scope.
+The extraction entry reads stored text. Use the separate preview entry to render slide visuals.
 
 ## Replace slide text
 
@@ -15,3 +15,11 @@ Use `pptx-replace-text` with a source `path`, an unused absolute `output_path`, 
 A match can span styled runs in the same paragraph. The replacement inherits the first matched run's styling. Other slides and notes stay in their existing package parts.
 
 Example `{"path":"D:/work/review.pptx","output_path":"D:/work/review-approved.pptx","slide":2,"find":"Draft","replacement":"Approved","expected_matches":1}`.
+
+## Manage slides and render previews
+
+`pptx-create` generates an editable presentation from up to 30 `slides` with a title and optional body paragraphs. `pptx-append-slides` adds such slides to an existing deck using its first slide's layout or the deck's first master layout. These are plain title-and-body slides.
+
+`pptx-remove-slides` deletes one-based positions from a copy. Slide parts and uniquely owned notes or media are removed when they are no longer reachable. The tool rejects a removal when another part still links to the slide. `pptx-export-preview` renders the presentation to a new PDF in presentation order.
+
+Creation and rendered previews require LibreOffice Impress. Editing, appending, and removing slides work directly on the package. Every write requires an unused output path.

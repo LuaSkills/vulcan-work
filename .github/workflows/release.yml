@@ -17,7 +17,7 @@ jobs:
 
       - name: Validate and package Vulcan Work
         id: package
-        uses: LuaSkills/luaskills-debug@v0.8.1
+        uses: LuaSkills/luaskills-debug@v0.9.0
         with:
           layout: standard
           expect-tag: ${{ github.ref_name }}

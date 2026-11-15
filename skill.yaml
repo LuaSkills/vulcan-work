@@ -84,3 +84,45 @@ entries:
     lua_module: pptx_replace_text
     help: pptx
     input_schema_file: schemas/pptx-replace-text.input.schema.json
+  - name: pdf-fill-form
+    description: Write values to declared AcroForm fields in a new PDF copy.
+    lua_entry: runtime/pdf-fill-form.lua
+    lua_module: pdf_fill_form
+    help: pdf
+    input_schema_file: schemas/pdf-fill-form.input.schema.json
+  - name: pdf-ocr-pages
+    description: Recognize rasterized PDF pages and return text with continuation offsets.
+    lua_entry: runtime/pdf-ocr-pages.lua
+    lua_module: pdf_ocr_pages
+    help: pdf
+    input_schema_file: schemas/pdf-ocr-pages.input.schema.json
+  - name: docx-replace-text
+    description: Replace exact text in a specified Word paragraph or table cell and write a copy.
+    lua_entry: runtime/docx-replace-text.lua
+    lua_module: docx_replace_text
+    help: docx
+    input_schema_file: schemas/docx-replace-text.input.schema.json
+  - name: pptx-create
+    description: Create a new PowerPoint presentation from editable slide titles and body paragraphs.
+    lua_entry: runtime/pptx-create.lua
+    lua_module: pptx_create
+    help: pptx
+    input_schema_file: schemas/pptx-create.input.schema.json
+  - name: pptx-append-slides
+    description: Append editable slides to a copy of an existing PowerPoint presentation.
+    lua_entry: runtime/pptx-append-slides.lua
+    lua_module: pptx_append_slides
+    help: pptx
+    input_schema_file: schemas/pptx-append-slides.input.schema.json
+  - name: pptx-remove-slides
+    description: Remove selected slides and write a new PowerPoint copy.
+    lua_entry: runtime/pptx-remove-slides.lua
+    lua_module: pptx_remove_slides
+    help: pptx
+    input_schema_file: schemas/pptx-remove-slides.input.schema.json
+  - name: pptx-export-preview
+    description: Render a PowerPoint presentation and write a PDF preview.
+    lua_entry: runtime/pptx-export-preview.lua
+    lua_module: pptx_export_preview
+    help: pptx
+    input_schema_file: schemas/pptx-export-preview.input.schema.json

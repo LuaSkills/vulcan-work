@@ -14,4 +14,4 @@ Use `xlsx-write-cells` with an unused absolute `output_path`, an exact `sheet` n
 
 Example `{"output_path":"D:/work/summary.xlsx","sheet":"Summary","cells":[{"address":"A1","value":"Total"},{"address":"B1","formula":"=SUM(B2:B10)"}]}`.
 
-Saving a workbook copy clears stored formula results. A spreadsheet application can recalculate them when the copy is opened. Workbooks with drawings, signatures, or unsupported advanced parts are rejected to protect source fidelity.
+Saving a workbook copy clears stored formula results. A spreadsheet application can recalculate them when the copy is opened. Editing copies unused parts as-is, including charts, drawings, layouts, styles, and unrelated resources. Signed files and targeted grouped formulas, rich-value metadata, and merged non-anchor cells are rejected. When a value changes, formula caches are cleared across the workbook and Excel is asked to recalculate.

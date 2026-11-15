@@ -13,3 +13,7 @@ Example `{"path":"D:/work/notes.docx","start_block":3,"limit":1,"text_offset":10
 Use `docx-append-paragraphs` with an unused absolute `output_path` and up to 100 ordered `paragraphs`. Each item accepts `text` and optional `heading_level` from 1 to 9. Omit `path` to create a document, or pass a source `.docx` to append paragraphs to a new copy. Text may contain explicit line breaks and tabs.
 
 Example `{"output_path":"D:/work/meeting.docx","paragraphs":[{"text":"Decisions","heading_level":1},{"text":"Review the revised budget."}]}`.
+
+## Edit existing text
+
+Use `docx-replace-text` to target one position from `docx-read-blocks`. For a table, provide both the one-based `row` and the one-based physical `column`. Provide exact single-line `find`, `replacement`, and `expected_matches`. The replacement stays within one paragraph or table cell. Use an empty search to fill an empty paragraph. Signed documents are rejected for editing.

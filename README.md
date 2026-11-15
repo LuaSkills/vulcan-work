@@ -17,10 +17,17 @@ A LuaSkills package for reading and writing local office files. Supported format
 | `xlsx-write-cells` | Create a workbook or write cells to a copy |
 | `docx-append-paragraphs` | Create a Word document or append text and headings to a copy |
 | `pptx-replace-text` | Replace an exact number of text matches on one slide in a new copy |
+| `pdf-fill-form` | Fill named AcroForm fields |
+| `pdf-ocr-pages` | Recognize scanned PDF pages |
+| `docx-replace-text` | Edit a Word paragraph or table cell |
+| `pptx-create`, `pptx-append-slides`, `pptx-remove-slides` | Create or modify an editable slide deck |
+| `pptx-export-preview` | Render a presentation as PDF |
 
 Supply an absolute file path. PDF page numbers are one-based. Excel ranges use A1 notation and the exact worksheet name. See [tool help](help/help.md) for limits and result details. Long text can be continued by reading the same item with its returned offset. PowerPoint can include speaker notes.
 
 Write operations require an unused absolute output path in an existing directory. They preserve the source files.
+
+Excel copies preserve unrelated drawing and chart parts. OCR needs Poppler and either Tesseract or Windows OCR. Creating PowerPoint decks and exporting previews require LibreOffice Impress. These local applications remain separate from the skill package.
 
 ## Verify and package
 

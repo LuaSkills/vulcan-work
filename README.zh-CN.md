@@ -17,10 +17,17 @@
 | `xlsx-write-cells` | 新建工作簿，或向工作簿副本批量写入单元格 |
 | `docx-append-paragraphs` | 新建 Word 文档，或向副本追加段落和标题 |
 | `pptx-replace-text` | 在新副本的指定幻灯片上精确替换文字 |
+| `pdf-fill-form` | 按字段名填写 AcroForm 表单 |
+| `pdf-ocr-pages` | 识别扫描 PDF 页面 |
+| `docx-replace-text` | 编辑 Word 正文段落或表格单元格 |
+| `pptx-create`、`pptx-append-slides`、`pptx-remove-slides` | 新建演示文稿或增删幻灯片 |
+| `pptx-export-preview` | 生成 PDF 预览 |
 
 传入文件的绝对路径。PDF 页码从 1 开始。Excel 使用 A1 范围和准确的工作表名称。限制与字段说明见[工具帮助](help/help.md)。长文本可按返回的偏移续读。PowerPoint 可同时读取演讲者备注。
 
 写入时须提供已有目录中的新文件绝对路径。操作保留源文件和已有输出文件。
+
+Excel 写入副本时保留未修改的图表和绘图部件。OCR 需要 Poppler，以及 Tesseract 或 Windows OCR。PowerPoint 新建和预览需要 LibreOffice Impress。这些本机应用独立安装。
 
 ## 验证与打包
 

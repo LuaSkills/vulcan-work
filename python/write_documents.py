@@ -61,13 +61,30 @@ def replace_package_member(package: ZipFile, part: str, data: bytes, output_path
     """Copy an Office archive to a new file with only the selected member replaced.
     复制 Office 归档到新文件，仅替换指定成员。
     """
+    return rewrite_package(package, {part: data}, set(), output_path, extension)
+
+
+def rewrite_package(package: ZipFile, replacements: dict[str, bytes], omitted: set[str],
+                    output_path: str, extension: str) -> dict:
+    """Preserve untouched Office members while replacing, adding, or removing selected parts.
+    在替换、添加或删除指定部件时保留未修改的 Office 成员。
+    """
     def generate(stream) -> None:
-        """Write the replacement bytes and copy every other member as stored.
-        写入替换字节，并复制其他成员原有内容。
+        """Write original archive members and the requested changes.
+        写入原始归档成员和请求的改动。
         """
-        with ZipFile(stream, "w") as output:
-            for member in package.infolist():
-                output.writestr(member, data if member.filename == part else package.read(member))
+        # A new member has no source ZipInfo, so it uses the archive compression default.
+        # 新成员没有源 ZipInfo，因此使用归档的默认压缩方式。
+        members = package.infolist()
+        original = {member.filename for member in members}
+        with ZipFile(stream, "w", compression=ZIP_DEFLATED) as output:
+            for member in members:
+                name = member.filename
+                if name not in omitted:
+                    output.writestr(member, replacements[name] if name in replacements else package.read(member))
+            for name, data in replacements.items():
+                if name not in original:
+                    output.writestr(name, data)
 
     return write_new_file(output_path, extension, generate)
 
@@ -296,3 +313,125 @@ def pptx_replace_text(args: dict, _context: dict) -> dict:
             raise ValueError(f"Expected {expected} matching text occurrences, found {actual}.")
         result = replace_package_member(package, part, document.toxml(encoding="UTF-8"), args["output_path"], ".pptx")
     return {**result, "slide": slide_number, "matches_replaced": actual}
+
+
+def word_dom_blocks(container: Element, word: str):
+    """Yield the same logical Word blocks used by the read tool.
+    逐个返回与读取工具相同的 Word 逻辑块。
+    """
+    for element in container.childNodes:
+        if element.nodeType != element.ELEMENT_NODE or element.namespaceURI != word:
+            continue
+        if element.localName in ("p", "tbl"):
+            yield element
+        elif element.localName in ("sdt", "sdtContent", "customXml"):
+            yield from word_dom_blocks(element, word)
+
+
+def word_text_elements(paragraph: Element, word: str):
+    """Yield Word text and boundaries between independently editable spans.
+    逐个返回 Word 文本和独立可编辑片段之间的边界。
+    """
+    for element in paragraph.childNodes:
+        if element.nodeType != element.ELEMENT_NODE or element.namespaceURI != word:
+            continue
+        if element.localName in ("t", "tab", "br", "cr", "fldChar", "instrText"):
+            yield element
+        elif element.localName not in ("del", "p", "drawing", "object", "pict"):
+            yield from word_text_elements(element, word)
+
+
+def replace_word_paragraph(paragraph: Element, word: str, before: str, after: str) -> int:
+    """Replace text in a Word paragraph without crossing a field, tab, or break.
+    替换 Word 段落中的文字，同时保持字段、制表符和换行边界。
+    """
+    # A blank match means this one paragraph must contain no editable text.
+    # 空匹配表示该段落必须没有可编辑文本。
+    elements = list(word_text_elements(paragraph, word))
+    if not before:
+        if any(node.localName != "t" or node.firstChild for node in elements):
+            return 0
+        node = child(paragraph.ownerDocument, child(paragraph.ownerDocument, paragraph, word, "r"), word, "t")
+        node.setAttributeNS(XMLNS, "xmlns:w", word)
+        node.parentNode.setAttributeNS(XMLNS, "xmlns:w", word)
+        node.setAttributeNS(XML, "xml:space", "preserve")
+        node.appendChild(paragraph.ownerDocument.createTextNode(after))
+        return 1
+
+    # Accumulate ordinary runs and restart the match at every boundary.
+    # 累积普通文本片段，并在每个边界重新匹配。
+    runs = []
+    changed = 0
+    for element in elements:
+        if element.localName == "t":
+            runs.append(element)
+        else:
+            changed += replace_text_runs(runs, before, after)
+            runs.clear()
+    changed += replace_text_runs(runs, before, after)
+    if changed:
+        for element in elements:
+            if element.localName == "t":
+                element.setAttributeNS(XML, "xml:space", "preserve")
+    return changed
+
+
+def direct_word_children(parent: Element, word: str, tag: str) -> list[Element]:
+    """Return direct children matching a Word element name.
+    返回与指定 Word 元素名匹配的直接子元素。
+    """
+    return [node for node in parent.childNodes if node.nodeType == node.ELEMENT_NODE
+            and node.namespaceURI == word and node.localName == tag]
+
+
+def docx_replace_text(args: dict, _context: dict) -> dict:
+    """Edit a specified Word paragraph or physical table cell in a separate copy.
+    在独立副本中编辑指定 Word 段落或实际表格单元格。
+    """
+    # Exact text and match count protect against stale block numbers and unexpected replacements.
+    # 精确文本和匹配次数用于防止块位置过时及意外替换。
+    before = checked_text(args["find"])
+    after = checked_text(args["replacement"])
+    expected = args["expected_matches"]
+    if not 1 <= expected <= MAX_REPLACEMENTS or any(char in before + after for char in ("\r", "\n", "\t")):
+        raise ValueError("Provide a valid match count and single-line text without tabs.")
+    row_number, column_number = args.get("row"), args.get("column")
+    if (row_number is None) != (column_number is None):
+        raise ValueError("Provide both row and column for a table cell.")
+    with checked_package(read_office_zip(args["path"], ".docx")) as package:
+        # Use the authoritative main document relationship and its namespace.
+        # 使用主文档的权威关系及其命名空间。
+        part = main_part(package)
+        variant = root_variant(xml_part(package, part), "wordprocessingml", "document")
+        word = namespace("wordprocessingml", variant)[1:-1]
+        document = parseString(package.read(part), forbid_dtd=True)
+        bodies = direct_word_children(document.documentElement, word, "body")
+        if len(bodies) != 1:
+            raise ValueError("Word document must have one main body.")
+        # Read and write use identical one-based body block positions.
+        # 读写共用同一套一基正文块位置。
+        blocks = list(word_dom_blocks(bodies[0], word))
+        number = args["block"]
+        if not 1 <= number <= len(blocks):
+            raise ValueError(f"Block {number} is outside the {len(blocks)} available blocks.")
+        block = blocks[number - 1]
+        if block.localName == "p" and row_number is None:
+            paragraphs = [block]
+        elif block.localName == "tbl" and row_number is not None:
+            # Resolve physical XML cells; grid spans do not create extra editable cells.
+            # 按实际 XML 单元格定位，跨列不会创建额外可编辑单元格。
+            rows = direct_word_children(block, word, "tr")
+            if not 1 <= row_number <= len(rows):
+                raise ValueError("The requested Word table row does not exist.")
+            cells = direct_word_children(rows[row_number - 1], word, "tc")
+            if not 1 <= column_number <= len(cells):
+                raise ValueError("The requested physical Word table cell does not exist.")
+            paragraphs = [item for item in word_dom_blocks(cells[column_number - 1], word)
+                          if item.localName == "p"]
+        else:
+            raise ValueError("Select a paragraph block or provide row and column for a table block.")
+        actual = sum(replace_word_paragraph(paragraph, word, before, after) for paragraph in paragraphs)
+        if actual != expected:
+            raise ValueError(f"Expected {expected} matching text occurrences, found {actual}.")
+        result = replace_package_member(package, part, document.toxml(encoding="UTF-8"), args["output_path"], ".docx")
+    return {**result, "block": number, "matches_replaced": actual}

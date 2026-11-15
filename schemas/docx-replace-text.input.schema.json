@@ -1,0 +1,57 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the original file."
+    },
+    "output_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unused absolute output path in an existing directory."
+    },
+    "block": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "One-based main body block position from docx-read-blocks."
+    },
+    "row": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "One-based actual row in a table block."
+    },
+    "column": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "One-based physical cell in a table row."
+    },
+    "find": {
+      "type": "string",
+      "minLength": 0,
+      "maxLength": 10000,
+      "description": "Exact text to match. Empty matches only an empty paragraph."
+    },
+    "replacement": {
+      "type": "string",
+      "minLength": 0,
+      "maxLength": 10000,
+      "description": "Single-line replacement text."
+    },
+    "expected_matches": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Required exact match count."
+    }
+  },
+  "required": [
+    "path",
+    "output_path",
+    "block",
+    "find",
+    "replacement",
+    "expected_matches"
+  ],
+  "additionalProperties": false
+}

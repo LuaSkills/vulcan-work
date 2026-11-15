@@ -1,0 +1,47 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the original file."
+    },
+    "output_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unused absolute output path in an existing directory."
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact AcroForm name from pdf-inspect."
+          },
+          "value": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 10000,
+            "description": "Text value or the exact button or choice state."
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 100
+    }
+  },
+  "required": [
+    "path",
+    "output_path",
+    "fields"
+  ],
+  "additionalProperties": false
+}

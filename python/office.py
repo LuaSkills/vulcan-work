@@ -47,15 +47,30 @@ def pdf_inspect(args: dict, _context: dict) -> dict:
     # Field enumeration uses the interactive form dictionary, independent of page text.
     # 字段枚举使用交互表单字典，与页面文本独立。
     reader = open_pdf(args["path"])
-    fields = list(reader.get_fields() or {})
+    fields = reader.get_fields() or {}
     # Page the declared field names without exposing form values.
     # 分页返回已声明的字段名，避免带出表单值。
     names, next_field = select_items(
-        fields, args.get("start_field", 1), args.get("limit", MAX_LIST_ITEMS), MAX_LIST_ITEMS,
+        list(fields), args.get("start_field", 1), args.get("limit", MAX_LIST_ITEMS), MAX_LIST_ITEMS,
     )
+    # Fields expose their editable type and accepted button or choice states.
+    # 字段提供可编辑类型，以及可接受的按钮或选项状态。
+    details = []
+    include_values = args.get("include_values", False)
+    for name in names:
+        field = fields[name]
+        item = {"name": name, "type": str(field.get("/FT", "")), "read_only": bool(int(field.get("/Ff", 0)) & 1)}
+        if "/_States_" in field:
+            item["states"] = [str(value) for value in field["/_States_"]]
+        if include_values:
+            value = field.get("/V")
+            item["value"] = ([str(part) for part in value] if isinstance(value, list)
+                             else str(value) if isinstance(value, str) else None)
+        details.append(item)
     return {
         "page_count": len(reader.pages),
         "field_count": len(fields),
+        "fields": details,
         "field_names": names,
         "fields_truncated": next_field is not None,
         "next_field": next_field,

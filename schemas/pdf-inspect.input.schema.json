@@ -15,6 +15,10 @@
       "type": "integer",
       "minimum": 1,
       "description": "Number of fields to return, at most 100. Defaults to 100."
+    },
+    "include_values": {
+      "type": "boolean",
+      "description": "Return current form values as well as editable field names and states. Defaults to false."
     }
   },
   "required": [

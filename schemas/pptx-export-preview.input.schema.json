@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the original file."
+    },
+    "output_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unused absolute output path in an existing directory."
+    }
+  },
+  "required": [
+    "path",
+    "output_path"
+  ],
+  "additionalProperties": false
+}

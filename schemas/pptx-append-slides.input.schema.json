@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the original file."
+    },
+    "output_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unused absolute output path in an existing directory."
+    },
+    "slides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 10000,
+            "description": "Slide title."
+          },
+          "body": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 10000,
+              "description": "One paragraph."
+            }
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 30
+    }
+  },
+  "required": [
+    "path",
+    "output_path",
+    "slides"
+  ],
+  "additionalProperties": false
+}

@@ -2,7 +2,7 @@
 
 The wrappers download the pinned official LuaSkills debugger, verify its checksum, and prepare the local managed Python runtime. The debugger stages the source in its ignored `.luaskills-debug/` workspace.
 
-Run verification from the repository root:
+Run verification from the repository root. On Windows, set `VULCAN_WORK_DEBUGGER` to the full path of an installed matching debugger to exercise that executable with the repository's isolated runtime.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify_skill.ps1

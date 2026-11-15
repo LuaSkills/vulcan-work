@@ -4,6 +4,7 @@
 
 import json
 from pathlib import Path
+from shutil import which
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -482,3 +483,120 @@ class OfficeEntryTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("found 1", result.stdout + result.stderr)
             self.assertFalse(output.exists())
+
+
+    def test_pdf_fills_form_values_in_a_copy(self) -> None:
+        """Fill a form widget and verify its value through the read entry.
+        填写一个表单部件，并通过读取入口验证其值。
+        """
+        with TemporaryDirectory() as directory:
+            # Start from the interactive PDF stored as a synthetic fixture.
+            # 从保存为合成样例的交互式 PDF 开始。
+            source = FIXTURES / "office.pdf"
+            original = source.read_bytes()
+            output = Path(directory) / "filled.pdf"
+            result = self.invoke("pdf-fill-form", path=str(source), output_path=str(output),
+                                 fields=[{"name": "Department", "value": "Finance"}])
+            self.assertEqual(result["fields_written"], 1)
+            fields = self.result("pdf-inspect", output, include_values=True)["fields"]
+            self.assertEqual(fields[0]["value"], "Finance")
+            self.assertEqual(source.read_bytes(), original)
+
+    @unittest.skipUnless(which("pdftoppm") and (sys.platform == "win32" or which("tesseract")),
+                         "Poppler plus a supported local OCR engine are required")
+    def test_pdf_ocr_recovers_scanned_text(self) -> None:
+        """Recognize digits from a raster-only PDF fixture.
+        从只有栅格图像的 PDF 样例识别数字。
+        """
+        # Prove that ordinary text extraction has no stored text to return.
+        # 验证普通文本提取没有可用的已存储文本。
+        plain = self.result("pdf-extract-text", "scan.pdf", start_page=1, end_page=1)
+        self.assertEqual(plain["pages"][0]["text"], "")
+        language = "chi_sim" if sys.platform == "win32" and not which("tesseract") else "eng"
+        scan = self.result("pdf-ocr-pages", "scan.pdf", start_page=1, end_page=1, language=language)
+        self.assertIn("82753", scan["pages"][0]["text"].replace(" ", ""))
+
+    def test_excel_writer_preserves_chart_and_drawing_parts(self) -> None:
+        """Write a real chart workbook while preserving unrelated package bytes.
+        写入带有实际图表的工作簿，同时保留无关的包字节。
+        """
+        with TemporaryDirectory() as directory:
+            # Include nontrivial drawing and chart relationship parts in the input.
+            # 在输入中包含非平凡的绘图和图表关系部件。
+            source = FIXTURES / "chart.xlsx"
+            output = Path(directory) / "edited.xlsx"
+            self.invoke("xlsx-write-cells", path=str(source), output_path=str(output), sheet="Data",
+                        cells=[{"address": "B2", "value": 17}, {"address": "H15", "formula": "=B2+1"}])
+            with ZipFile(source) as original, ZipFile(output) as edited:
+                for part in original.namelist():
+                    if part.startswith(("xl/charts/", "xl/drawings/")):
+                        self.assertEqual(edited.read(part), original.read(part))
+            self.assertEqual(self.result("xlsx-read-range", output, sheet="Data", range="B2")["cells"][0]["value"], 17)
+            self.assertEqual(self.result("xlsx-read-range", output, sheet="Data", range="H15")["cells"][0]["formula"], "=B2+1")
+
+    def test_word_edits_existing_paragraph_and_table_cell(self) -> None:
+        """Update a paragraph and cell without replacing the source document.
+        更新段落和表格单元格，同时保留源文档。
+        """
+        with TemporaryDirectory() as directory:
+            # Apply two edits to distinct copies and compare the final body structure.
+            # 在不同副本上应用两次编辑，并比较最终正文结构。
+            folder = Path(directory)
+            first, final = folder / "paragraph.docx", folder / "table.docx"
+            source = FIXTURES / "office.docx"
+            original = source.read_bytes()
+            self.invoke("docx-replace-text", path=str(source), output_path=str(first),
+                        block=2, find="Review", replacement="Approval", expected_matches=1)
+            self.invoke("docx-replace-text", path=str(first), output_path=str(final),
+                        block=3, row=1, column=2, find="Total", replacement="Amount", expected_matches=1)
+            result = self.result("docx-read-blocks", final)
+            self.assertEqual(result["blocks"][1]["text"], "Approval\tneeded")
+            self.assertEqual(result["blocks"][2]["text"], "Item\tAmount")
+            self.assertEqual(self.result("docx-list-comments", final)["comment_count"], 1)
+            self.assertEqual(source.read_bytes(), original)
+
+
+    def test_powerpoint_appends_and_removes_slides_with_orphan_notes(self) -> None:
+        """Append a slide and physically remove the old slide's orphan notes.
+        追加一张幻灯片，并实际清除被删幻灯片的孤立备注。
+        """
+        with TemporaryDirectory() as directory:
+            # The fixture's first presentation position is its second stored slide.
+            # 样例按放映顺序的第一页是存储顺序的第二页。
+            folder = Path(directory)
+            added, removed = folder / "added.pptx", folder / "removed.pptx"
+            source = FIXTURES / "office.pptx"
+            self.invoke("pptx-append-slides", path=str(source), output_path=str(added),
+                        slides=[{"title": "Decision", "body": ["Approved for Q4"]}])
+            self.invoke("pptx-remove-slides", path=str(added), output_path=str(removed), slides=[1])
+            slides = self.result("pptx-extract-text", removed)["slides"]
+            self.assertEqual([slide["text"] for slide in slides], ["Original first", "Decision\nApproved for Q4"])
+            with ZipFile(removed) as archive:
+                self.assertNotIn("ppt/slides/slide2.xml", archive.namelist())
+                self.assertNotIn("ppt/notesSlides/notesSlide1.xml", archive.namelist())
+
+    @unittest.skipUnless(
+        which("soffice") or which("soffice.com")
+        or (sys.platform == "win32" and Path("C:/Program Files/LibreOffice/program/soffice.com").is_file())
+        or (sys.platform == "darwin" and Path("/Applications/LibreOffice.app/Contents/MacOS/soffice").is_file()),
+        "LibreOffice Impress is required for creation and preview",
+    )
+    def test_powerpoint_creates_and_renders_a_pdf_preview(self) -> None:
+        """Create real editable slides and check the LibreOffice PDF render.
+        创建真实可编辑的幻灯片，并检查 LibreOffice 的 PDF 渲染结果。
+        """
+        with TemporaryDirectory() as directory:
+            # The render must contain the authored slide text outside the LuaSkills PPTX reader.
+            # 渲染必须在 LuaSkills PPTX 读取器之外体现编写的幻灯片文本。
+            folder = Path(directory)
+            deck, preview = folder / "authored.pptx", folder / "preview.pdf"
+            self.invoke("pptx-create", output_path=str(deck), slides=[
+                {"title": "Quarterly Plan", "body": ["Review metrics"]},
+                {"title": "Next steps", "body": ["Confirm delivery"]},
+            ])
+            slides = self.result("pptx-extract-text", deck)["slides"]
+            self.assertIn("Quarterly Plan", slides[0]["text"])
+            self.invoke("pptx-export-preview", path=str(deck), output_path=str(preview))
+            pages = self.result("pdf-extract-text", preview, start_page=1, end_page=2)["pages"]
+            self.assertIn("Quarterly Plan", pages[0]["text"])
+            self.assertIn("Confirm delivery", pages[1]["text"])

@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the original file."
+    },
+    "start_page": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "First page, inclusive."
+    },
+    "end_page": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Last page, inclusive. At most three pages per call."
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "eng",
+        "chi_sim",
+        "chi_tra"
+      ],
+      "description": "Installed recognizer language. Defaults to auto."
+    },
+    "text_offset": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Character offset for a single page."
+    }
+  },
+  "required": [
+    "path",
+    "start_page",
+    "end_page"
+  ],
+  "additionalProperties": false
+}
