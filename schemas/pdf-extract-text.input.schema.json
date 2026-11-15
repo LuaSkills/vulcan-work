@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the local input file."
+    },
+    "start_page": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "First page to extract (one-based)."
+    },
+    "end_page": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Last page to extract (inclusive)."
+    }
+  },
+  "required": [
+    "path",
+    "start_page",
+    "end_page"
+  ],
+  "additionalProperties": false
+}

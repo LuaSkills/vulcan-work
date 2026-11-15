@@ -96,9 +96,9 @@ SKIP_RUNTIME_SETUP="false"
 # Force controls whether an existing matching workspace is rebuilt.
 # Force 控制是否重建已有的匹配工作区。
 FORCE="false"
-# SkipManagedNodeSetup controls whether managed Node.js and pnpm are downloaded.
-# SkipManagedNodeSetup 控制是否下载受管 Node.js 与 pnpm。
-SKIP_MANAGED_NODE_SETUP="false"
+# SkipManagedPythonSetup controls whether managed Python and uv are downloaded.
+# SkipManagedPythonSetup 控制是否下载受管 Python 与 uv。
+SKIP_MANAGED_PYTHON_SETUP="false"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -114,8 +114,8 @@ while [ "$#" -gt 0 ]; do
       FORCE="true"
       shift
       ;;
-    --skip-managed-node-setup)
-      SKIP_MANAGED_NODE_SETUP="true"
+    --skip-managed-python-setup)
+      SKIP_MANAGED_PYTHON_SETUP="true"
       shift
       ;;
     *)
@@ -199,33 +199,15 @@ if [ "$SKIP_RUNTIME_SETUP" != "true" ]; then
   fi
 fi
 
-if [ "$SKIP_MANAGED_NODE_SETUP" != "true" ]; then
-  # NodeVersion is the exact managed Node.js version declared by dependencies.yaml.
-  # NodeVersion 是 dependencies.yaml 声明的精确受管 Node.js 版本。
-  NODE_VERSION="24.18.0"
-  # PnpmVersion is the exact managed package-manager version declared by dependencies.yaml.
-  # PnpmVersion 是 dependencies.yaml 声明的精确受管包管理器版本。
-  PNPM_VERSION="11.11.0"
-  # NodeManifest is the official installation marker for the pinned Node.js distribution.
-  # NodeManifest 是固定 Node.js 发行版的官方安装标记。
-  NODE_MANIFEST="$DEBUG_ROOT/runtime/dependencies/runtimes/node/node-$NODE_VERSION-$PLATFORM_KEY/runtime-manifest.json"
-  # PnpmManifest is the official installation marker for the pinned pnpm distribution.
-  # PnpmManifest 是固定 pnpm 发行版的官方安装标记。
-  PNPM_MANIFEST="$DEBUG_ROOT/runtime/dependencies/runtimes/node/pnpm-$PNPM_VERSION/runtime-manifest.json"
-  if [ ! -f "$NODE_MANIFEST" ] || [ ! -f "$PNPM_MANIFEST" ]; then
-    # FetcherPath ships inside the debug archive, so the archive checksum already covers its bytes.
-    # FetcherPath 随调试压缩包分发，因此压缩包校验和已覆盖其字节。
-    FETCHER_PATH="$DEBUG_ROOT/scripts/deps/fetch_managed_runtimes.sh"
-    if [ ! -f "$FETCHER_PATH" ]; then
-      echo "The debug package does not contain scripts/deps/fetch_managed_runtimes.sh. Use luaskills-debug v0.8.0 or later." >&2
-      exit 1
-    fi
-    RUNTIME_ROOT="$DEBUG_ROOT/runtime" NODE_VERSION="$NODE_VERSION" PNPM_VERSION="$PNPM_VERSION" bash "$FETCHER_PATH" node
-    if [ ! -f "$NODE_MANIFEST" ] || [ ! -f "$PNPM_MANIFEST" ]; then
-      echo "Managed Node.js setup completed without the documented runtime manifests." >&2
-      exit 1
-    fi
-  else
-    echo "Managed Node.js $NODE_VERSION and pnpm $PNPM_VERSION are already initialized."
+if [ "$SKIP_MANAGED_PYTHON_SETUP" != "true" ]; then
+  # The package manifest is the source of the managed interpreter and tool versions.
+  # 技能包清单是受管解释器和包管理器版本的唯一来源。
+  PYTHON_VERSION="$(sed -nE 's/^  version: "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' "$PROJECT_ROOT/dependencies.yaml")"
+  UV_VERSION="$(sed -nE 's/^  package_manager_version: "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' "$PROJECT_ROOT/dependencies.yaml")"
+  if [ -z "$PYTHON_VERSION" ] || [ -z "$UV_VERSION" ]; then
+    echo "Missing pinned Python or uv version in dependencies.yaml." >&2
+    exit 1
   fi
+  RUNTIME_ROOT="$DEBUG_ROOT/runtime" PYTHON_VERSION="$PYTHON_VERSION" UV_VERSION="$UV_VERSION" \
+    bash "$DEBUG_ROOT/scripts/deps/fetch_managed_runtimes.sh" python
 fi

@@ -36,9 +36,9 @@ Require the setup script to:
 4. Verify the archive's SHA-256 against its checksums entry before extraction.
 5. Store the complete debugger workspace under the Git-ignored `.luaskills-debug/` directory.
 6. Run the official `setup_runtime` flow to download matching Lua runtime packages.
-7. Run `scripts/deps/fetch_managed_runtimes.*` from the verified archive to install Node.js `24.18.0` with pnpm `11.11.0`.
+7. Run `scripts/deps/fetch_managed_runtimes.*` from the verified archive to install the Python and uv versions declared in `dependencies.yaml`.
 
-Use `-Force` or `--force` to rebuild the workspace. When only the debugger binary is needed, pass both `-SkipRuntimeSetup -SkipManagedNodeSetup` or `--skip-runtime-setup --skip-managed-node-setup`.
+Use `-Force` or `--force` to rebuild the workspace. When only the debugger binary is needed, pass both `-SkipRuntimeSetup -SkipManagedPythonSetup` or `--skip-runtime-setup --skip-managed-python-setup`.
 
 ## Standard Debug Sequence
 
@@ -46,8 +46,8 @@ After changing an entry or manifest, follow this fixed sequence:
 
 1. `inspect`: validate the manifest, physical directory binding, entry files, and formal engine loading.
 2. `list-tools`: confirm public and canonical tool names.
-3. `call`: invoke the target tool with real arguments. If `node_runtime` is declared, invoke the managed Node.js entry in practice.
-4. `verify_skill`: run the Python unit tests, loading, enumeration, every example tool call, `validate`, and `package`.
+3. `call`: invoke the target tool with real arguments. Invoke the managed Python handlers through the actual skill entries.
+4. `verify_skill`: run the Python unit tests, loading, enumeration, all synthetic office fixture calls, `validate`, and `package`.
 
 Run `validate` and `package` through the same wrapper when checking release readiness alone. `package` uses `LUASKILLS_PACKAGE_LAYOUT` when set, otherwise `standard`; pass `--layout platform` (`-Layout platform` on Windows) to preview the platform layout.
 
@@ -58,7 +58,7 @@ Windows:
 ```powershell
 .\scripts\debug_skill.ps1 -Command inspect
 .\scripts\debug_skill.ps1 -Command list-tools
-.\scripts\debug_skill.ps1 -Command call -Tool hello -ArgsFile .\examples\debug\hello.args.json -Output json
+.\scripts\debug_skill.ps1 -Command call -Tool vulcan-work-pdf-inspect -ArgsFile .\office.args.json -Output json
 .\scripts\debug_skill.ps1 -Command validate
 .\scripts\debug_skill.ps1 -Command package
 .\scripts\verify_skill.ps1
@@ -69,7 +69,7 @@ Linux/macOS:
 ```bash
 bash ./scripts/debug_skill.sh inspect
 bash ./scripts/debug_skill.sh list-tools
-bash ./scripts/debug_skill.sh call --tool hello --args-file ./examples/debug/hello.args.json --output json
+bash ./scripts/debug_skill.sh call --tool vulcan-work-pdf-inspect --args-file ./office.args.json --output json
 bash ./scripts/debug_skill.sh validate
 bash ./scripts/debug_skill.sh package
 bash ./scripts/verify_skill.sh
@@ -82,11 +82,11 @@ bash ./scripts/verify_skill.sh
 - Use only tool names confirmed by `list-tools`; never guess an entry name.
 - Enable `EnableHostResult` or `--enable-host-result` only when explicitly testing the `host_result` bridge.
 
-Example argument file:
+Save a JSON file named `office.args.json` before running the examples. Replace the path with the absolute path to a local PDF.
 
 ```json
 {
-  "name": "ai-debug"
+  "path": "/absolute/path/to/office.pdf"
 }
 ```
 

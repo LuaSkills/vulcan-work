@@ -2,19 +2,25 @@
 
 # Vulcan Work
 
-Vulcan Work 是面向办公场景的 LuaSkills 技能包，计划支持处理 PDF、Excel、Word 和 PowerPoint 文件。
+面向办公场景的 LuaSkills 技能包。首版提供 PDF 和 XLSX 的本地只读工具。
 
-## 功能规划
+| 入口 | 返回内容 |
+| --- | --- |
+| `pdf-inspect` | 页数和交互式表单字段名 |
+| `pdf-extract-text` | 指定范围内按页分组的文本 |
+| `xlsx-list-sheets` | 工作表名称与可见状态 |
+| `xlsx-read-range` | 单元格值、公式以及 Excel 已保存的公式结果 |
 
-- PDF · 查看文档信息、按页提取文本、列出可填写的表单字段。
-- Excel（`.xlsx`）· 列出工作表、读取指定单元格范围，分别返回公式和缓存值。
-- Word（`.docx`）· 读取文档结构、正文和批注。
-- PowerPoint（`.pptx`）· 按幻灯片提取文本、生成预览。
+传入文件的绝对路径。PDF 页码从 1 开始。Excel 使用 A1 范围和准确的工作表名称。限制与字段说明见[工具帮助](help/help.md)。Word 和 PowerPoint 仍在规划中。
 
-首版从 PDF 和 Excel 的只读操作做起。当前仓库处于模板初始化阶段，上述办公工具仍在规划中。
+## 验证与打包
+
+在开发用 Python 环境中安装 PyYAML（`python -m pip install pyyaml`）。
+
+Windows 执行 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify_skill.ps1`，Linux 或 macOS 执行 `bash scripts/verify_skill.sh`。调试器会准备固定版本的受管 Python 环境，并用合成文件调用实际工具。标准发布包输出到 `dist/`。
 
 ## 许可证与来源
 
-继承的模板采用 [MIT 许可证](LICENSE)，当前仓库所含组件的授权信息见[第三方声明](licenses/THIRD_PARTY_NOTICES.md)。后续如复用 Anthropic Skills 的代码或资源，发布包会随附适用的许可证和来源说明。
+项目采用 [MIT 许可证](LICENSE)。[第三方声明](licenses/THIRD_PARTY_NOTICES.md)记录了锁定的运行时依赖和许可证原文，以及设计阶段参考的 Anthropic Skills 来源。
 
-本仓库 fork 自 [LuaSkills/demo-skill](https://github.com/LuaSkills/demo-skill)，开发和打包流程见上游模板文档。
+项目基于 [LuaSkills demo-skill 模板](https://github.com/LuaSkills/demo-skill)初始化。

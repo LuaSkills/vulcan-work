@@ -1,163 +1,27 @@
-name: LuaSkills Demo Skill
-version: 0.4.0
-enable: true
-debug: false
-config_validator: runtime/config_validator.lua
-config:
-  - key: api_token
-    type: string
-    required: true
-    sensitive: true
-    description: Service access token used by the configuration example.
-    title: API token
-    group: Connection
-    order: 10
-    placeholder: sk-...
-    format: password
-    restart_required: true
-    constraints:
-      min_length: 1
-      max_length: 4096
-  - key: retry_count
-    type: integer
-    default: 3
-    description: Maximum request retry count used by the configuration example.
-    title: Retry count
-    group: Requests
-    order: 20
-    constraints:
-      minimum: 0
-      maximum: 10
-  - key: temperature
-    type: float
-    default: 0.7
-    description: Sampling temperature used by the configuration example.
-    title: Temperature
-    group: Requests
-    order: 30
-    advanced: true
-    constraints:
-      minimum: 0.0
-      maximum: 2.0
-  - key: provider
-    type: enum
-    default: openai
-    description: Service provider used by the configuration example.
-    title: Provider
-    group: Connection
-    order: 5
-    options:
-      - value: openai
-        label: OpenAI
-        description: OpenAI service.
-      - value: local
-        label: Local service
-        description: User-managed local service.
-  - key: telemetry_enabled
-    type: boolean
-    default: false
-    description: Whether telemetry is enabled for the configuration example.
-    title: Telemetry
-    group: Diagnostics
-    order: 40
-sqlite:
-  enable: false
+name: vulcan-work
+version: 0.1.0
 help:
   main:
-    description: Main help node for the LuaSkills/demo-skill repository used in update smoke tests.
+    description: Learn the supported formats, result fields, and limits for Vulcan Work.
     file: help/help.md
-  topics:
-    - name: hello
-      description: Explain the minimal hello tool kept by the template cleaner.
-      file: help/hello.md
-    - name: demo-status
-      description: Explain the runtime diagnostics tool.
-      file: help/demo-status.md
-    - name: rg-dependency
-      description: Explain the no-op rg dependency and how it is resolved.
-      file: help/rg-dependency.md
-    - name: overflow-demo
-      description: Explain the paged output demo and local overflow template.
-      file: help/overflow-demo.md
-    - name: node-runtime
-      description: Explain the managed Node.js runtime invocation demo.
-      file: help/node-runtime.md
-    - name: package-config
-      description: Explain the LuaSkills package configuration declaration and persisted format.
-      file: help/package-config.md
-    - name: native-library
-      description: Explain the bundled native library dependency and how Lua loads it through FFI.
-      file: help/native-library.md
 entries:
-  - name: hello
-    description: Return one greeting; this is the minimal tool kept by the template cleaner.
-    lua_entry: runtime/hello.lua
-    lua_module: hello
-    help: hello
-    parameters:
-      - name: name
-        type: string
-        description: Optional name greeted by the tool.
-        required: false
-  - name: demo-status
-    description: Return stable runtime diagnostics for install and lifecycle testing.
-    lua_entry: runtime/demo_status.lua
-    lua_module: demo_status
-    help: demo-status
-    parameters:
-      - name: name
-        type: string
-        description: Optional caller label included in the response.
-        required: false
-      - name: include_context
-        type: boolean
-        description: Include vulcan.context.request when true.
-        required: false
-  - name: rg-check
-    description: Report the expected local rg dependency path and run rg --version when it exists.
-    lua_entry: runtime/rg_check.lua
-    lua_module: rg_check
-    help: rg-dependency
-    parameters:
-      - name: run_version
-        type: boolean
-        description: Run rg --version when the local binary exists.
-        required: false
-  - name: overflow-demo
-    description: Emit paged markdown output and one skill-local overflow template hint.
-    lua_entry: runtime/overflow_demo.lua
-    lua_module: overflow_demo
-    help: overflow-demo
-    parameters:
-      - name: sections
-        type: integer
-        description: Number of repeated sections in the generated markdown.
-        required: false
-  - name: node-runtime-demo
-    description: Invoke one managed Node.js ESM handler twice and return runtime diagnostics.
-    lua_entry: runtime/node_runtime_demo.lua
-    lua_module: node_runtime_demo
-    help: node-runtime
-    parameters:
-      - name: text
-        type: string
-        description: Optional text forwarded to the managed Node.js handler.
-        required: false
-      - name: number
-        type: integer
-        description: Optional integer incremented by the managed Node.js handler.
-        required: false
-  - name: native-demo
-    description: Report the bundled demo-native library path and call it through LuaJIT FFI when it exists.
-    lua_entry: runtime/native_demo.lua
-    lua_module: native_demo
-    help: native-library
-    parameters:
-      - name: a
-        type: integer
-        description: Optional first addend between -1000000000 and 1000000000; defaults to 40.
-        required: false
-      - name: b
-        type: integer
-        description: Optional second addend between -1000000000 and 1000000000; defaults to 2.
-        required: false
+  - name: pdf-inspect
+    description: Get the page count and AcroForm field names from a local, unencrypted PDF.
+    lua_entry: runtime/pdf-inspect.lua
+    lua_module: pdf_inspect
+    input_schema_file: schemas/pdf-inspect.input.schema.json
+  - name: pdf-extract-text
+    description: Extract bounded text for a range of one to ten pages from a local, unencrypted PDF. Scans require OCR.
+    lua_entry: runtime/pdf-extract-text.lua
+    lua_module: pdf_extract_text
+    input_schema_file: schemas/pdf-extract-text.input.schema.json
+  - name: xlsx-list-sheets
+    description: List worksheets, including hidden worksheets, in a local XLSX workbook.
+    lua_entry: runtime/xlsx-list-sheets.lua
+    lua_module: xlsx_list_sheets
+    input_schema_file: schemas/xlsx-list-sheets.input.schema.json
+  - name: xlsx-read-range
+    description: Read up to 100 cells in a local XLSX worksheet. Return formulas and saved results separately without recalculating.
+    lua_entry: runtime/xlsx-read-range.lua
+    lua_module: xlsx_read_range
+    input_schema_file: schemas/xlsx-read-range.input.schema.json

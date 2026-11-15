@@ -1,0 +1,2 @@
+tests/fixtures/*.pdf binary
+licenses/defusedxml-LICENSE.txt -text whitespace=-blank-at-eol,-blank-at-eof

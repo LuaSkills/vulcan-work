@@ -2,19 +2,25 @@
 
 # Vulcan Work
 
-Vulcan Work is a LuaSkills toolkit for office workflows with PDF, Excel, Word, and PowerPoint files.
+A LuaSkills package for reading local office files. This first version supports PDF and XLSX.
 
-## Roadmap
+| Entry | Result |
+| --- | --- |
+| `pdf-inspect` | Page count and interactive form field names |
+| `pdf-extract-text` | Text grouped by page for a requested range |
+| `xlsx-list-sheets` | Worksheet names and visibility |
+| `xlsx-read-range` | Cell values, formulas, and any results already saved by Excel |
 
-- PDF — inspect documents, extract text from selected pages, and list fillable fields.
-- Excel (`.xlsx`) — list worksheets and read selected ranges, with formulas and cached values reported separately.
-- Word (`.docx`) — read document structure, text, and comments.
-- PowerPoint (`.pptx`) — extract text by slide and generate previews.
+Supply an absolute file path. PDF page numbers are one-based. Excel ranges use A1 notation and the exact worksheet name. See [tool help](help/help.md) for limits and result details. Word and PowerPoint are planned.
 
-The first milestone covers read-only PDF and Excel operations. This repository is currently at the template stage. The office tools listed above are planned.
+## Verify and package
+
+Install PyYAML in the development Python environment (`python -m pip install pyyaml`).
+
+On Windows, run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify_skill.ps1`. On Linux or macOS, run `bash scripts/verify_skill.sh`. The debugger installs the pinned managed Python environment and runs the tools against synthetic files. The standard package is written to `dist/`.
 
 ## License and acknowledgments
 
-The inherited template is available under the [MIT License](LICENSE). See [Third-party notices](licenses/THIRD_PARTY_NOTICES.md) for the components currently included in the repository. Any code or assets adapted from Anthropic's skills will carry their applicable license and source attribution in the distributed package.
+The project uses the [MIT License](LICENSE). The [third-party notices](licenses/THIRD_PARTY_NOTICES.md) record the locked runtime dependencies and their license texts, as well as the Anthropic Skills material referenced during design.
 
-This repository was forked from [LuaSkills/demo-skill](https://github.com/LuaSkills/demo-skill), which documents the development and packaging workflow.
+The project started from the [LuaSkills demo-skill template](https://github.com/LuaSkills/demo-skill).

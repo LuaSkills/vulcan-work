@@ -1,6 +1,6 @@
 ---
 name: luaskills-development
-description: Develop, inspect, invoke, validate, review, package, and release LuaSkills with the official LuaSkills debugger and managed Node.js runtime. Use when creating or modifying a skill, downloading luaskills-debug, debugging Lua or Node.js entries, running iterative code reviews, generating release packages, or publishing a GitHub Release.
+description: Develop, inspect, invoke, validate, review, package, and release LuaSkills with the official LuaSkills debugger and managed Python runtime. Use when creating or modifying a skill, downloading luaskills-debug, debugging Lua or Python entries, running iterative code reviews, generating release packages, or publishing a GitHub Release.
 ---
 
 # LuaSkills Development
@@ -14,11 +14,11 @@ description: Develop, inspect, invoke, validate, review, package, and release Lu
 
 ## Development Loop
 
-1. Run `scripts/setup_debug.ps1` or `scripts/setup_debug.sh` to download `luaskills-debug-tool-{platform}.tar.gz`, verify it against `luaskills-debug-checksums.txt`, and install Lua runtime packages, Node.js, and pnpm. Keep every downloaded artifact under `.luaskills-debug/`.
+1. Run `scripts/setup_debug.ps1` or `scripts/setup_debug.sh` to download `luaskills-debug-tool-{platform}.tar.gz`, verify it against `luaskills-debug-checksums.txt`, and install Lua runtime packages, Python, and uv. Keep every downloaded artifact under `.luaskills-debug/`.
 2. Modify only formal skill content in `skill.yaml`, `dependencies.yaml`, `runtime/`, `node/`, `python/`, `native/`, `help/`, `overflow_templates/`, `resources/`, `licenses/`, and `schemas/`. Build bundled native libraries with `scripts/build_native.py`; never commit the built binaries.
 3. Write every generated code comment in bilingual pairs: English on the first line and Chinese on the second line. Cover every class, function, method, interface, parameter, return value, variable definition, and non-obvious design decision.
 4. Inspect and invoke real entries through `scripts/debug_skill.ps1` or `scripts/debug_skill.sh`. Read [AI Invocation Debugging Guide](references/ai-debugging.md) completely before first-time debugging or invocation troubleshooting.
-5. Run `scripts/verify_skill.ps1` or `scripts/verify_skill.sh` to execute the Python unit tests, real engine loading, tool enumeration, all example tool calls, `validate`, and `package`. In the demo repository, verify skips `validate` and `package` because only the host's native library is built locally; the release workflow runs them after all five native builds.
+5. Run `scripts/verify_skill.ps1` or `scripts/verify_skill.sh` to execute the Python unit tests, real engine loading, tool enumeration, all synthetic office fixture calls, `validate`, and `package`. Vulcan Work uses the standard package layout.
 6. Choose the release layout: a skill without native libraries uses `standard`; a skill with large native libraries for several systems uses `platform`, selected by the GitHub repository variable `LUASKILLS_PACKAGE_LAYOUT`. Preview it with `debug_skill package --layout platform` (`-Layout platform` on Windows).
 7. Inspect the assets in `dist/`. Confirm every zip contains only formal package entries and that its single top-level directory matches the repository-derived `skill_id`.
 8. Read and execute the [Five-Consecutive-Pass Review Protocol](references/review-loop.md) completely. If any issue appears, fix it, rerun the full flow, reset the consecutive-pass counter to zero, and continue until five consecutive reviews find no issues.
@@ -31,7 +31,7 @@ Windows:
 ```powershell
 .\scripts\debug_skill.ps1 -Command inspect
 .\scripts\debug_skill.ps1 -Command list-tools
-.\scripts\debug_skill.ps1 -Command call -Tool hello -ArgsFile .\examples\debug\hello.args.json -Output json
+.\scripts\debug_skill.ps1 -Command call -Tool vulcan-work-pdf-inspect -ArgsFile .\office.args.json -Output json
 .\scripts\debug_skill.ps1 -Command validate
 .\scripts\debug_skill.ps1 -Command package -Layout standard -OutDir dist
 ```
@@ -41,7 +41,7 @@ Linux/macOS:
 ```bash
 bash ./scripts/debug_skill.sh inspect
 bash ./scripts/debug_skill.sh list-tools
-bash ./scripts/debug_skill.sh call --tool hello --args-file ./examples/debug/hello.args.json --output json
+bash ./scripts/debug_skill.sh call --tool vulcan-work-pdf-inspect --args-file ./office.args.json --output json
 bash ./scripts/debug_skill.sh validate
 bash ./scripts/debug_skill.sh package --layout standard
 ```

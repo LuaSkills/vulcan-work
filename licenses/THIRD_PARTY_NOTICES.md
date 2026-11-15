@@ -1,11 +1,17 @@
-# Third-Party Notices
+# Third-party notices
 
-The `LuaSkills/demo-skill` repository declares one optional tool dependency:
+The managed Python environment installs the exact dependencies recorded in
+[`python/requirements.lock`](../python/requirements.lock). The archive includes
+the following license texts.
 
-- `rg` from the `BurntSushi/ripgrep` GitHub release distribution
+| Dependency | Version | License | Source |
+| --- | --- | --- | --- |
+| pypdf | 7.1.0 | [BSD-3-Clause](pypdf-LICENSE.txt) | [Release](https://pypi.org/project/pypdf/7.1.0/) |
+| openpyxl | 3.1.5 | [MIT](openpyxl-LICENCE.rst) | [Release](https://pypi.org/project/openpyxl/3.1.5/) |
+| et-xmlfile | 2.0.0 | [MIT and Python license notices](et-xmlfile-LICENCE.rst) ([Python license text](et-xmlfile-LICENCE.python)) | [Release](https://pypi.org/project/et-xmlfile/2.0.0/) |
+| defusedxml | 0.7.1 | [Python Software Foundation License](defusedxml-LICENSE.txt) | [Release](https://pypi.org/project/defusedxml/0.7.1/) |
 
-The dependency is not bundled into the repository itself.
-It is downloaded only by the LuaSkills dependency installer when the host allows network installation.
-
-The bundled `demo-native` FFI dependency is first-party code built from `native/demo_native.c` under this repository's license.
-Windows builds produced with MinGW GCC link libgcc statically, which the GCC Runtime Library Exception permits.
+The PDF and spreadsheet workflows were informed by
+[Anthropic Skills at commit 1780c5e](https://github.com/anthropics/skills/tree/1780c5e5a552fd4d1c9d6a7b0cab26b0c2bef064/skills).
+The current package uses original handlers and contains no Anthropic skill files
+or assets.

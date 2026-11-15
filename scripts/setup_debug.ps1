@@ -11,9 +11,9 @@ Optional luaskills-debug release tag that overrides .luaskills-version.
 Skip downloading Lua runtime packages after extracting the debug tool.
 解压调试器后跳过 Lua runtime packages 下载。
 
-.PARAMETER SkipManagedNodeSetup
-Skip downloading the pinned managed Node.js and pnpm distributions.
-跳过固定版本的受管 Node.js 与 pnpm 发行版下载。
+.PARAMETER SkipManagedPythonSetup
+Skip downloading the pinned managed Python and uv distributions.
+跳过固定版本的受管 Python 与 uv 发行版下载。
 
 .PARAMETER Force
 Recreate the ignored debug workspace even when the requested version is installed.
@@ -26,9 +26,9 @@ param(
     # Whether Lua runtime package setup should be skipped.
     # 是否跳过 Lua runtime package 初始化。
     [switch]$SkipRuntimeSetup,
-    # Whether managed Node.js and pnpm setup should be skipped.
-    # 是否跳过受管 Node.js 与 pnpm 初始化。
-    [switch]$SkipManagedNodeSetup,
+    # Whether managed Python and uv setup should be skipped.
+    # 是否跳过受管 Python 与 uv 初始化。
+    [switch]$SkipManagedPythonSetup,
     # Whether the existing debug workspace should be rebuilt.
     # 是否重建已有调试工作区。
     [switch]$Force
@@ -273,51 +273,33 @@ function Test-InstalledVersion {
     return $InstalledVersion -eq $ReleaseTag
 }
 
-function Install-ManagedNodeRuntime {
+function Install-ManagedPythonRuntime {
     <#
     .SYNOPSIS
-    Install Node.js plus pnpm with the managed-runtime fetcher shipped in the verified debug archive.
-    使用已校验调试压缩包内附带的受管运行时拉取器安装 Node.js 与 pnpm。
-
+    Install the managed Python and uv versions declared in dependencies.yaml.
+    安装 dependencies.yaml 声明的受管 Python 和 uv 版本。
     .PARAMETER DebugRoot
-    Absolute ignored LuaSkills debug workspace path.
-    被忽略的 LuaSkills 调试工作区绝对路径。
+    Absolute path to the ignored LuaSkills debug directory.
+    被忽略的 LuaSkills 调试目录的绝对路径。
     #>
     param([string]$DebugRoot)
 
-    # NodeVersion is the exact managed Node.js version declared by dependencies.yaml.
-    # NodeVersion 是 dependencies.yaml 声明的精确受管 Node.js 版本。
-    $NodeVersion = "24.18.0"
-    # PnpmVersion is the exact managed package-manager version declared by dependencies.yaml.
-    # PnpmVersion 是 dependencies.yaml 声明的精确受管包管理器版本。
-    $PnpmVersion = "11.11.0"
-    # RuntimeRoot is the compatible LuaSkills data root used by the debug binary.
-    # RuntimeRoot 是调试二进制使用的兼容 LuaSkills 数据根。
-    $RuntimeRoot = Join-Path $DebugRoot "runtime"
-    # NodeManifest is the official installation marker for the pinned Node.js distribution.
-    # NodeManifest 是固定 Node.js 发行版的官方安装标记。
-    $NodeManifest = Join-Path $RuntimeRoot "dependencies\runtimes\node\node-$NodeVersion-windows-x64\runtime-manifest.json"
-    # PnpmManifest is the official installation marker for the pinned pnpm distribution.
-    # PnpmManifest 是固定 pnpm 发行版的官方安装标记。
-    $PnpmManifest = Join-Path $RuntimeRoot "dependencies\runtimes\node\pnpm-$PnpmVersion\runtime-manifest.json"
-    if ((Test-Path -LiteralPath $NodeManifest -PathType Leaf) -and (Test-Path -LiteralPath $PnpmManifest -PathType Leaf)) {
-        Write-Host "Managed Node.js $NodeVersion and pnpm $PnpmVersion are already initialized."
-        return
-    }
-
-    # FetcherPath ships inside the debug archive, so the archive checksum already covers its bytes.
-    # FetcherPath 随调试压缩包分发，因此压缩包校验和已覆盖其字节。
+    # The debug archive checksum also covers the managed-runtime fetcher.
+    # 调试压缩包的校验和也覆盖受管运行时拉取器。
     $FetcherPath = Join-Path $DebugRoot "scripts\deps\fetch_managed_runtimes.ps1"
-    if (-not (Test-Path -LiteralPath $FetcherPath -PathType Leaf)) {
-        throw "The debug package does not contain scripts\deps\fetch_managed_runtimes.ps1. Use luaskills-debug v0.8.0 or later."
+    # Read the pinned versions from the only runtime block in the package manifest.
+    # 从技能包清单中唯一的运行时块读取固定版本。
+    $Declaration = [IO.File]::ReadAllText((Join-Path (Get-ProjectRoot) "dependencies.yaml"))
+    # Require exactly formatted numeric versions to match the package declaration.
+    # 要求版本使用清单声明的精确数字格式。
+    $PythonVersion = [regex]::Match($Declaration, '(?m)^  version: "(\d+\.\d+\.\d+)"\r?$').Groups[1].Value
+    $UvVersion = [regex]::Match($Declaration, '(?m)^  package_manager_version: "(\d+\.\d+\.\d+)"\r?$').Groups[1].Value
+    if (-not $PythonVersion -or -not $UvVersion) {
+        throw "Missing pinned Python or uv version in dependencies.yaml."
     }
-
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $FetcherPath -Target node -RuntimeRoot $RuntimeRoot -NodeVersion $NodeVersion -PnpmVersion $PnpmVersion
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $FetcherPath -Target python -RuntimeRoot (Join-Path $DebugRoot "runtime") -PythonVersion $PythonVersion -UvVersion $UvVersion
     if ($LASTEXITCODE -ne 0) {
-        throw "Managed Node.js setup failed with exit code $LASTEXITCODE."
-    }
-    if (-not (Test-Path -LiteralPath $NodeManifest -PathType Leaf) -or -not (Test-Path -LiteralPath $PnpmManifest -PathType Leaf)) {
-        throw "Managed Node.js setup completed without the documented runtime manifests."
+        throw "Managed Python setup failed with exit code $LASTEXITCODE."
     }
 }
 
@@ -409,6 +391,6 @@ if (-not $SkipRuntimeSetup) {
     }
 }
 
-if (-not $SkipManagedNodeSetup) {
-    Install-ManagedNodeRuntime -DebugRoot $DebugRoot
+if (-not $SkipManagedPythonSetup) {
+    Install-ManagedPythonRuntime -DebugRoot $DebugRoot
 }

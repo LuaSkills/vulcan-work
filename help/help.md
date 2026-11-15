@@ -1,27 +1,10 @@
-# LuaSkills Demo Skill
+# Vulcan Work
 
-This `LuaSkills/demo-skill` repository is a complete demo package for LuaSkills.
+Use these read-only tools for local office files. Supply absolute file paths and narrow selections.
 
-It is designed to validate:
+- `pdf-inspect` returns the page count and up to 100 AcroForm field names. Password-protected and encrypted PDFs are unsupported.
+- `pdf-extract-text` accepts an inclusive one-based range of at most ten pages. It returns each requested page separately, with up to 1,000 text characters per page and an explicit truncation flag. An empty text result can occur with image-only pages. The tool does not perform OCR.
+- `xlsx-list-sheets` lists worksheets with their visibility and reports the total when the list is capped.
+- `xlsx-read-range` accepts a single A1 cell or a rectangular range of up to 100 cells. Use the worksheet's exact name. A formula cell includes the formula and its saved result. A null saved result means the workbook has no readable cached result for that cell. Text values longer than 160 characters are truncated with a flag.
 
-- package installation from GitHub release assets
-- package updates through new release versions
-- skill uninstall behavior
-- skill-local dependency installation
-- native libraries bundled inside the skill package
-- host overflow handling with a skill-local template hint
-
-Available workflows:
-
-- `hello`
-  - return one greeting; the minimal tool kept by the template cleaner
-- `demo-status`
-  - inspect the active skill instance and request context
-- `rg-dependency`
-  - inspect the optional local `rg` dependency path
-- `overflow-demo`
-  - verify paged host output and skill-local overflow templates
-- `node-runtime-demo`
-  - invoke a pinned managed Node.js ESM handler with a pnpm-locked dependency
-- `native-library`
-  - call the bundled `demo-native` library through LuaJIT FFI
+The input file remains read-only. Files larger than 32 MiB are rejected. Excel recalculation, document editing, and remote URLs are outside the current tool set.
