@@ -23,13 +23,13 @@ A LuaSkills package for reading and writing local office files. Supported format
 | `pptx-create`, `pptx-append-slides`, `pptx-remove-slides` | Create or modify an editable slide deck |
 | `pptx-export-preview` | Render a presentation as PDF |
 
-Supply an absolute file path. PDF page numbers are one-based. Excel ranges use A1 notation and the exact worksheet name. See [tool help](help/help.md) for limits and result details. Long text can be continued by reading the same item with its returned offset. PowerPoint can include speaker notes.
+Supply an absolute file path. PDF page numbers are one-based. Excel ranges use A1 notation and the exact worksheet name. See [tool help](skills/office-workflow/SKILL.md) for limits and result details. Long text can be continued by reading the same item with its returned offset. PowerPoint can include speaker notes.
 
 Write operations require an unused absolute output path in an existing directory. They preserve the source files.
 
 Excel copies preserve unrelated drawing and chart parts. OCR requires Poppler's `pdftoppm` to rasterize PDF pages, including when the Windows OCR engine recognizes the text. Creating PowerPoint decks and exporting previews require LibreOffice Impress. LibreOffice PDF previews are for visual review. Extract or index text from the source PPTX because the preview can reorder Chinese text. These local applications remain separate from the skill package.
 
-Before creating a presentation or exporting a preview, check whether LibreOffice Impress is installed. If it is missing, ask the user before installing it. The user can open an existing PPTX in a presentation app for visual review. See [PowerPoint help](help/pptx.md#check-libreoffice-before-creating-or-rendering).
+Before creating a presentation or exporting a preview, check whether LibreOffice Impress is installed. If it is missing, ask the user before installing it. The user can open an existing PPTX in a presentation app for visual review. See [PowerPoint help](skills/office-workflow/references/pptx.md#check-libreoffice-before-creating-or-rendering).
 
 ## Verify and package
 

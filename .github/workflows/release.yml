@@ -20,6 +20,7 @@ jobs:
         uses: LuaSkills/luaskills-debug@v0.9.0
         with:
           layout: standard
+          include: skills
           expect-tag: ${{ github.ref_name }}
 
       - name: Publish the GitHub release

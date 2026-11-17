@@ -23,13 +23,13 @@
 | `pptx-create`、`pptx-append-slides`、`pptx-remove-slides` | 新建演示文稿或增删幻灯片 |
 | `pptx-export-preview` | 生成 PDF 预览 |
 
-传入文件的绝对路径。PDF 页码从 1 开始。Excel 使用 A1 范围和准确的工作表名称。限制与字段说明见[工具帮助](help/help.md)。长文本可按返回的偏移续读。PowerPoint 可同时读取演讲者备注。
+传入文件的绝对路径。PDF 页码从 1 开始。Excel 使用 A1 范围和准确的工作表名称。限制与字段说明见[工具帮助](skills/office-workflow/SKILL.md)。长文本可按返回的偏移续读。PowerPoint 可同时读取演讲者备注。
 
 写入时须提供已有目录中的新文件绝对路径。操作保留源文件和已有输出文件。
 
 Excel 写入副本时保留未修改的图表和绘图部件。OCR 要先用 Poppler 的 `pdftoppm` 将 PDF 页面转成图片，使用 Windows 系统 OCR 时也需要它。PowerPoint 新建和预览需要 LibreOffice Impress。PDF 预览用于核对画面，LibreOffice 导出时可能改变中文文本的阅读顺序。提取或索引文字时请使用源 PPTX。这些本机应用独立安装。
 
-新建演示文稿或生成 PDF 预览前，先检查宿主是否已安装 LibreOffice Impress。缺少时先询问用户是否安装。若用户选择暂不安装，可用自己的演示应用打开已有 PPTX，手动核对版面。检查路径见 [PowerPoint 帮助](help/pptx.md#check-libreoffice-before-creating-or-rendering)。
+新建演示文稿或生成 PDF 预览前，先检查宿主是否已安装 LibreOffice Impress。缺少时先询问用户是否安装。若用户选择暂不安装，可用自己的演示应用打开已有 PPTX，手动核对版面。检查路径见 [PowerPoint 帮助](skills/office-workflow/references/pptx.md#check-libreoffice-before-creating-or-rendering)。
 
 ## 验证与打包
 

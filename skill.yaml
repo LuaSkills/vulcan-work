@@ -1,22 +1,31 @@
 name: vulcan-work
 version: 0.1.0
-help:
-  main:
-    description: Choose when and how to inspect, edit, create, or render local PDF, XLSX, DOCX, and PPTX files.
-    file: help/help.md
-  topics:
-    - name: pdf
-      description: Inspect PDF pages and form values, extract text or run OCR, and merge pages or fill a form in a copy.
-      file: help/pdf.md
-    - name: xlsx
-      description: Find worksheets, read cells and saved formula results, or create and edit an Excel workbook copy.
-      file: help/xlsx.md
-    - name: docx
-      description: Read Word body blocks and review comments, create documents, append paragraphs, or edit precise text in a copy.
-      file: help/docx.md
-    - name: pptx
-      description: Read slide text and speaker notes, create or edit slides, or render a PDF preview.
-      file: help/pptx.md
+registration:
+  mode: implicit
+  default_locale: en-US
+  locales:
+    en-US:
+      title: Office documents
+      description: Inspect, edit, and create local PDF, Excel, Word, and PowerPoint files.
+    zh-CN:
+      title: 办公文档
+      description: 检查、编辑和创建本地 PDF、Excel、Word 和 PowerPoint 文件。
+    zh-TW:
+      title: 辦公文件
+      description: 檢查、編輯及建立本機 PDF、Excel、Word 和 PowerPoint 檔案。
+  prompt_skills:
+    - name: office-workflow
+      file: skills/office-workflow/SKILL.md
+      locales:
+        en-US:
+          title: Local office document workflow
+          description: For local PDF, Excel, Word, and PowerPoint tasks, load this guide before using generic tools. Covers PDF page counts and forms, spreadsheets, documents, and slides.
+        zh-CN:
+          title: 本地办公文档指南
+          description: 介绍怎样读取、检查、创建或编辑本地 PDF、表格、Word 文档和幻灯片。
+        zh-TW:
+          title: 本機辦公文件指南
+          description: 說明如何讀取、檢查、建立或編輯本機 PDF、試算表、Word 文件和投影片。
 entries:
   - name: pdf-inspect
     description: Get page counts and AcroForm field metadata from a local, unencrypted PDF. Set include_values to read stored field values.

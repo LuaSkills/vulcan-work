@@ -164,8 +164,8 @@ try {
     # ForwardedArgs 只包含所选调试器子命令接受的选项。
     $ForwardedArgs = @($Command)
     if ($Command -in @("validate", "package")) {
-        $ForwardedArgs += @("--skill-path", $ProjectRoot)
-        foreach ($Entry in $Include) {
+        $ForwardedArgs += @("--skill-path", $ProjectRoot, "--include", "skills")
+        foreach ($Entry in $Include | Where-Object { $_ -ne "skills" }) {
             $ForwardedArgs += @("--include", $Entry)
         }
     }

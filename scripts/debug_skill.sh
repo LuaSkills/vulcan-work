@@ -127,14 +127,14 @@ if [ "$COMMAND" = "probe-mirrors" ]; then
 fi
 
 if [ "$COMMAND" = "validate" ]; then
-  "$BINARY_PATH" validate --skill-path "$PROJECT_ROOT" "$@"
+  "$BINARY_PATH" validate --skill-path "$PROJECT_ROOT" --include skills "$@"
   exit $?
 fi
 
 if [ "$COMMAND" = "package" ]; then
   # This skill ships one standard archive across supported platforms.
   # 本技能在各平台共用同一个标准归档。
-  "$BINARY_PATH" package --skill-path "$PROJECT_ROOT" --out-dir "$PROJECT_ROOT/dist" --layout standard "$@"
+  "$BINARY_PATH" package --skill-path "$PROJECT_ROOT" --out-dir "$PROJECT_ROOT/dist" --layout standard --include skills "$@"
   exit $?
 fi
 
